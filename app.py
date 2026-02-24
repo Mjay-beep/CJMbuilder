@@ -45,7 +45,7 @@ app.secret_key = SESSION_SECRET
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,   # JS에서 쿠키 접근 불가
     SESSION_COOKIE_SAMESITE="Lax", # CSRF 방어
-    SESSION_COOKIE_SECURE=False,   # HTTPS 배포 시 True로 변경 (Procfile 참고)
+    SESSION_COOKIE_SECURE=bool(os.environ.get("RAILWAY_ENVIRONMENT")),  # Railway HTTPS 자동 감지
     PERMANENT_SESSION_LIFETIME=86400,  # 24시간
 )
 
@@ -278,11 +278,12 @@ def generate():
     if not is_authenticated():
         return jsonify({"error": "인증이 필요합니다."}), 401
 
-    # ── OpenAI API 키 확인 (서버 환경변수에서만) ──
-    if not OPENAI_API_KEY:
+    # ── OpenAI API 키 확인 (매 요청마다 환경변수를 직접 읽어 Railway 호환성 보장) ──
+    api_key = os.environ.get("OPENAI_API_KEY", "")
+    if not api_key:
         return jsonify({
             "error": "서버에 OPENAI_API_KEY 환경변수가 설정되지 않았습니다.\n"
-                     ".env 파일을 확인해주세요."
+                     "Railway Variables 탭에서 OPENAI_API_KEY를 설정해주세요."
         }), 500
 
     data = request.json or {}
@@ -304,7 +305,7 @@ def generate():
     )
 
     try:
-        client = OpenAI(api_key=OPENAI_API_KEY)
+        client = OpenAI(api_key=api_key)
         response = client.chat.completions.create(
             model=OPENAI_MODEL,
             messages=[
@@ -331,7 +332,7 @@ def generate():
     except Exception as e:
         err = str(e)
         if "api_key" in err.lower() or "authentication" in err.lower() or "incorrect" in err.lower():
-            return jsonify({"error": "❌ OpenAI API 키가 올바르지 않습니다. .env 파일을 확인해주세요."}), 401
+            return jsonify({"error": "❌ OpenAI API 키가 올바르지 않습니다. Railway Variables에서 OPENAI_API_KEY를 확인해주세요."}), 401
         if "rate_limit" in err.lower():
             return jsonify({"error": "⏳ API 요청 한도 초과. 잠시 후 다시 시도해주세요."}), 429
         if "quota" in err.lower():

@@ -1,0 +1,17 @@
+# ⚠ 이 파일들은 절대 외부에 올리지 마세요
+.env
+*.env
+
+# Python 캐시
+__pycache__/
+*.pyc
+*.pyo
+.Python
+
+# macOS
+.DS_Store
+.AppleDouble
+
+# 임시 파일
+~$*
+*.tmp

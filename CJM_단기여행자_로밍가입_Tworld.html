@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CJM | 단기 여행자 로밍 상품 검색 및 가입 | Tworld</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --figjam-bg: #f5f5f0;
+    --figjam-card: #ffffff;
+    --col-w: 220px;
+    --row-label-w: 136px;
+
+    --yellow:  #FFF3B0;
+    --yellow-b: #E6C818;
+    --pink:    #FFD6E7;
+    --pink-b:  #E4003A;
+    --blue:    #D0E8FF;
+    --blue-b:  #1A73E8;
+    --purple:  #EAD7FF;
+    --purple-b:#7C3AED;
+    --green:   #CFFAE4;
+    --green-b: #1A9656;
+    --orange:  #FFE8CC;
+    --orange-b:#E87820;
+    --gray:    #F0F0EE;
+    --gray-b:  #888880;
+  }
+
+  body {
+    font-family: 'Inter', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+    background: var(--figjam-bg);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* ── Toolbar ── */
+  .toolbar {
+    background: #2C2C2C;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 200;
+  }
+  .toolbar-dot { width:12px;height:12px;border-radius:50%;display:inline-block; }
+  .toolbar-dots { display:flex;gap:6px; }
+  .toolbar-title { color: #ccc; font-size:13px;font-weight:600;margin-left:8px; }
+  .toolbar-chip {
+    margin-left: auto;
+    background:#E4003A; color:#fff;
+    font-size:11px;font-weight:700;
+    padding:3px 10px;border-radius:99px;
+  }
+  .toolbar-date { color:#888;font-size:11px; }
+
+  /* ── Canvas area ── */
+  .canvas { padding: 32px 24px; overflow-x: auto; }
+
+  /* ── Frame header ── */
+  .frame-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .frame-title-block { flex:1; }
+  .frame-eyebrow { font-size:10px;font-weight:700;letter-spacing:2px;color:#E4003A;text-transform:uppercase;margin-bottom:4px; }
+  .frame-title { font-size:22px;font-weight:800;color:#1a1a1a;letter-spacing:-0.5px; }
+  .frame-sub { font-size:12px;color:#666;margin-top:4px; }
+  .frame-legend {
+    display:flex;flex-direction:column;gap:6px;
+    background:#fff;border-radius:12px;padding:12px 16px;
+    border:1px solid #e8e8e8;font-size:11px;
+  }
+  .legend-row { display:flex;align-items:center;gap:8px; }
+  .legend-swatch { width:14px;height:14px;border-radius:4px;flex-shrink:0; }
+  .legend-text { color:#444;font-size:11px; }
+
+  /* ── Agent process badges ── */
+  .agent-flow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .agent-badge {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: #fff;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 99px;
+    padding: 4px 12px;
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .agent-badge .ab-num {
+    width:16px;height:16px;border-radius:50%;
+    display:inline-flex;align-items:center;justify-content:center;
+    font-size:9px;font-weight:800;color:#fff;
+  }
+  .ab-1 { background:#7C3AED; }
+  .ab-2 { background:#1A73E8; }
+  .ab-3 { background:#E6C818; color:#333 !important; }
+  .ab-4 { background:#1A73E8; }
+  .agent-arrow { color:#bbb;font-size:12px; }
+
+  /* ── Query block ── */
+  .query-block {
+    background: #fff;
+    border-radius: 14px;
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    border: 1.5px dashed #E4003A;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .query-label { font-size:11px;font-weight:800;color:#E4003A;white-space:nowrap; }
+  .query-pill {
+    background:#FFF0F3;color:#c0002e;
+    border:1.5px solid #ffaabb;
+    border-radius:99px;padding:4px 14px;
+    font-size:11px;font-weight:700;
+  }
+  .query-pill.active { background:#E4003A;color:#fff;border-color:#E4003A; }
+  .query-segment { background:#EAD7FF;color:#5b21b6;border-color:#c4b5fd; }
+  .query-channel { background:#D0E8FF;color:#1e40af;border-color:#93c5fd; }
+  .query-action  { background:#CFFAE4;color:#065f46;border-color:#6ee7b7; }
+
+  /* ── CJM Table ── */
+  .table-wrap {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(0,0,0,.1);
+    overflow: hidden;
+  }
+
+  table { border-collapse: collapse; width: 100%; min-width: 1700px; }
+
+  /* ── Column headers ── */
+  thead th {
+    background: #1a1a2e;
+    color: #fff;
+    text-align: center;
+    padding: 0;
+    border-right: 2px solid #2c2c44;
+    border-bottom: 3px solid #E4003A;
+    position: sticky;
+    top: 42px;
+    z-index: 100;
+  }
+  thead th:first-child {
+    background: #0d0d1a;
+    width: var(--row-label-w);
+    min-width: var(--row-label-w);
+    position: sticky;
+    left: 0;
+    z-index: 110;
+  }
+  .th-inner { padding: 14px 10px; }
+  .th-step-num {
+    width: 24px; height: 24px;
+    background: #E4003A;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 800;
+    margin: 0 auto 6px;
+  }
+  .th-step-name { font-size:12px;font-weight:700;line-height:1.3;display:block; }
+  .th-channel {
+    display: inline-block;
+    background: rgba(255,255,255,.15);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 9px;
+    font-weight: 600;
+    margin-top: 4px;
+    color: #ccc;
+  }
+  .th-timing {
+    display: inline-block;
+    background: rgba(228,0,58,.3);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 9px;
+    font-weight: 600;
+    margin-top: 3px;
+    color: #ffccd5;
+  }
+
+  /* ── Row label ── */
+  td.row-label {
+    position: sticky;
+    left: 0;
+    z-index: 50;
+    width: var(--row-label-w);
+    min-width: var(--row-label-w);
+    text-align: center;
+    vertical-align: middle;
+    padding: 12px 8px;
+    font-size: 11px;
+    font-weight: 800;
+    border-right: 3px solid #e0e0e0;
+    border-bottom: 2px solid #e8e8e8;
+  }
+  .row-label .rl-icon { font-size: 18px; display:block;margin-bottom:4px; }
+  .row-label .rl-text { font-size: 10px; display:block;line-height:1.3; }
+
+  .rl-action   { background:#EBF5FF; color:#1565C0; }
+  .rl-feeling  { background:#FFFDE7; color:#E65100; }
+  .rl-pain     { background:#FCE4EC; color:#B71C1C; }
+  .rl-needs    { background:#F3E5F5; color:#4A148C; }
+  .rl-insight  { background:#E8F5E9; color:#1B5E20; }
+
+  /* ── Data cells ── */
+  td.cell {
+    vertical-align: top;
+    padding: 10px;
+    border-right: 1px solid #ebebeb;
+    border-bottom: 2px solid #e8e8e8;
+    width: var(--col-w);
+    min-width: var(--col-w);
+  }
+
+  /* ── Sticky note cards ── */
+  .sticky {
+    border-radius: 10px;
+    padding: 9px 10px;
+    margin-bottom: 7px;
+    font-size: 11px;
+    line-height: 1.55;
+    position: relative;
+  }
+  /* Knowledge-based → yellow (Agent 3) */
+  .sk {
+    background: var(--yellow);
+    border-left: 3px solid var(--yellow-b);
+  }
+  /* Search-based → light blue (Agent 4) */
+  .ss {
+    background: var(--blue);
+    border-left: 3px solid var(--blue-b);
+  }
+  /* Insight → green */
+  .si {
+    background: var(--green);
+    border-left: 3px solid var(--green-b);
+  }
+  /* Feeling quote → orange */
+  .sq {
+    background: var(--orange);
+    border-left: 3px solid var(--orange-b);
+    font-style: italic;
+    font-size: 11px;
+  }
+  /* Purple highlight for key needs */
+  .sp {
+    background: var(--purple);
+    border-left: 3px solid var(--purple-b);
+  }
+
+  .badge {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 800;
+    border-radius: 4px;
+    padding: 1px 5px;
+    margin-bottom: 4px;
+    vertical-align: middle;
+  }
+  .bk { background: #E6C818; color:#5a4900; }
+  .bs { background: #1A73E8; color:#fff; }
+  .bi { background: #1A9656; color:#fff; }
+  .bp { background: #7C3AED; color:#fff; }
+
+  .stat {
+    display: inline-block;
+    background: #E4003A;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    border-radius: 99px;
+    padding: 1px 7px;
+    margin-left: 2px;
+  }
+
+  /* ── Journey flow arrows ── */
+  .journey-flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 18px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .jf-step {
+    background: #1a1a2e;
+    color: #fff;
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+    text-align: center;
+    min-width: 100px;
+  }
+  .jf-step span { display:block; font-size:9px; color:#ccc; margin-top:2px; font-weight:400; }
+  .jf-arrow { color:#E4003A; font-size:18px; padding: 0 4px; flex-shrink:0; }
+
+  /* Source note */
+  .source-note {
+    font-size:9px;color:#999;margin-top:4px;font-style:italic;
+  }
+
+  /* Emotion meter row */
+  .emo-bar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
+  }
+  .emo-dot {
+    width:8px;height:8px;border-radius:50%;
+  }
+  .emo-label { font-size:9px;color:#666; }
+
+  /* Section divider */
+  .section-divider {
+    font-size:9px;font-weight:800;letter-spacing:1px;
+    color:#aaa;text-transform:uppercase;
+    margin: 8px 0 5px;
+    padding-bottom: 3px;
+    border-bottom: 1px dashed #e0e0e0;
+  }
+</style>
+</head>
+<body>
+
+<!-- Toolbar -->
+<div class="toolbar">
+  <div class="toolbar-dots">
+    <span class="toolbar-dot" style="background:#FF5F57"></span>
+    <span class="toolbar-dot" style="background:#FEBC2E"></span>
+    <span class="toolbar-dot" style="background:#28C840"></span>
+  </div>
+  <span class="toolbar-title">FigJam — CJM Board</span>
+  <span class="toolbar-chip">🗺 Customer Journey Map</span>
+  <span class="toolbar-date" style="margin-left:12px">2026.02.24</span>
+</div>
+
+<!-- Canvas -->
+<div class="canvas">
+
+  <!-- Frame Header -->
+  <div class="frame-header">
+    <div class="frame-title-block">
+      <div class="frame-eyebrow">CJM · Tworld · Roaming</div>
+      <div class="frame-title">단기 여행자 로밍 상품 검색 및 가입 여정</div>
+      <div class="frame-sub">Target: 단기 해외여행을 앞둔 30대 직장인 · Channel: Tworld (앱/웹) · Action: 로밍 상품 검색 및 가입</div>
+    </div>
+    <div class="frame-legend">
+      <div class="legend-row">
+        <span class="legend-swatch" style="background:var(--yellow);border:2px solid var(--yellow-b)"></span>
+        <span class="legend-text"><strong>Agent 3</strong> — Knowledge 기반 (인터뷰·CSI 데이터)</span>
+      </div>
+      <div class="legend-row">
+        <span class="legend-swatch" style="background:var(--blue);border:2px solid var(--blue-b)"></span>
+        <span class="legend-text"><strong>Agent 4</strong> — 검색 기반 인사이트</span>
+      </div>
+      <div class="legend-row">
+        <span class="legend-swatch" style="background:var(--green);border:2px solid var(--green-b)"></span>
+        <span class="legend-text">Insight / 기회 솔루션</span>
+      </div>
+      <div class="legend-row">
+        <span class="legend-swatch" style="background:var(--orange);border:2px solid var(--orange-b)"></span>
+        <span class="legend-text">Feeling 인용구</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Agent Flow -->
+  <div class="agent-flow">
+    <div class="agent-badge">
+      <span class="ab-num ab-1">1</span>
+      쿼리 확장 에이전트
+    </div>
+    <span class="agent-arrow">→</span>
+    <div class="agent-badge">
+      <span class="ab-num ab-2">2</span>
+      Journey 제작 에이전트
+    </div>
+    <span class="agent-arrow">→</span>
+    <div class="agent-badge">
+      <span class="ab-num" style="background:#E6C818;color:#333">3</span>
+      데이터 기반 작성 (Knowledge)
+    </div>
+    <span class="agent-arrow">→</span>
+    <div class="agent-badge">
+      <span class="ab-num ab-4">4</span>
+      검색 기반 작성 (Web)
+    </div>
+  </div>
+
+  <!-- Query Block -->
+  <div class="query-block">
+    <span class="query-label">🔍 AGENT 1 · 확장 쿼리</span>
+    <span class="query-pill query-segment">단기 해외여행을 앞둔 30대 직장인</span>
+    <span style="color:#ccc;font-size:12px">의</span>
+    <span class="query-pill query-channel">Tworld (앱/웹)</span>
+    <span style="color:#ccc;font-size:12px">에서</span>
+    <span class="query-pill query-action">로밍 상품 검색 및 가입</span>
+    <span style="color:#ccc;font-size:12px">여정을 만드세요</span>
+  </div>
+
+  <!-- Journey Flow -->
+  <div class="journey-flow">
+    <div class="jf-step">①<br>여행 계획 &amp;<br>로밍 인지<span>D-7~D-3</span></div>
+    <div class="jf-arrow">→</div>
+    <div class="jf-step">②<br>Tworld 접속 &amp;<br>로밍 메뉴 탐색<span>D-3~D-2</span></div>
+    <div class="jf-arrow">→</div>
+    <div class="jf-step">③<br>상품 비교 &amp;<br>요금제 검토<span>D-2~D-1</span></div>
+    <div class="jf-arrow">→</div>
+    <div class="jf-step">④<br>로밍 상품<br>가입 신청<span>D-1</span></div>
+    <div class="jf-arrow">→</div>
+    <div class="jf-step">⑤<br>가입 확인 &amp;<br>단말 설정<span>D-Day</span></div>
+    <div class="jf-arrow">→</div>
+    <div class="jf-step">⑥<br>현지 로밍<br>연결 &amp; 사용<span>여행 중</span></div>
+    <div class="jf-arrow">→</div>
+    <div class="jf-step">⑦<br>귀국 후 요금<br>확인 &amp; 해지<span>귀국 후</span></div>
+  </div>
+
+  <!-- CJM Table -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th><div class="th-inner" style="text-align:left;font-size:10px;color:#888;">Y축 · 여정 요소</div></th>
+
+          <th><div class="th-inner">
+            <div class="th-step-num">1</div>
+            <span class="th-step-name">여행 계획 &amp;<br>로밍 필요성 인지</span>
+            <span class="th-channel">SNS / 검색포털</span>
+            <span class="th-timing">D-7~D-3</span>
+          </div></th>
+
+          <th><div class="th-inner">
+            <div class="th-step-num">2</div>
+            <span class="th-step-name">Tworld 앱/웹 접속 &amp;<br>로밍 메뉴 탐색</span>
+            <span class="th-channel">Tworld App/Web</span>
+            <span class="th-timing">D-3~D-2</span>
+          </div></th>
+
+          <th><div class="th-inner">
+            <div class="th-step-num">3</div>
+            <span class="th-step-name">로밍 상품 비교 &amp;<br>요금제 검토</span>
+            <span class="th-channel">Tworld App/Web</span>
+            <span class="th-timing">D-2~D-1</span>
+          </div></th>
+
+          <th><div class="th-inner">
+            <div class="th-step-num">4</div>
+            <span class="th-step-name">로밍 상품<br>가입 신청</span>
+            <span class="th-channel">Tworld App/Web</span>
+            <span class="th-timing">D-1</span>
+          </div></th>
+
+          <th><div class="th-inner">
+            <div class="th-step-num">5</div>
+            <span class="th-step-name">가입 완료 확인 &amp;<br>단말 설정</span>
+            <span class="th-channel">Tworld / 단말</span>
+            <span class="th-timing">D-Day 출국 전</span>
+          </div></th>
+
+          <th><div class="th-inner">
+            <div class="th-step-num">6</div>
+            <span class="th-step-name">현지 로밍 연결 &amp;<br>사용</span>
+            <span class="th-channel">현지 네트워크</span>
+            <span class="th-timing">여행 중</span>
+          </div></th>
+
+          <th><div class="th-inner">
+            <div class="th-step-num">7</div>
+            <span class="th-step-name">귀국 후 요금 확인 &amp;<br>서비스 종료</span>
+            <span class="th-channel">Tworld App/Web</span>
+            <span class="th-timing">귀국 후</span>
+          </div></th>
+        </tr>
+      </thead>
+      <tbody>
+
+        <!-- ─── USER ACTION ─── -->
+        <tr>
+          <td class="row-label rl-action">
+            <span class="rl-icon">🖐</span>
+            <span class="rl-text">User<br>Action</span>
+          </td>
+
+          <!-- Step 1 -->
+          <td class="cell">
+            <div class="sticky sk">
+              <span class="badge bk">K</span>
+              여행 일정을 확정하고 목적지 국가와 체류 기간(3~7일)을 결정함. 주변 지인이나 SNS에서 "해외에서 데이터 어떻게 씀?"을 검색·질문함. 최근 1년 이내 해외 방문 경험 있는 SKT 사용자 <span class="stat">2,700명</span> (전체 응답자 6,000명의 45%)
+              <span class="source-note">※ CSI 2025 하반기 Table L-1 / 임원 인터뷰 9 (로밍 상품 포트폴리오)</span>
+            </div>
+            <div class="sticky sk">
+              <span class="badge bk">K</span>
+              <strong>클럽 T로밍 인지도:</strong> SKT 사용자 중 <span class="stat">31.1%</span>만 인지, 전체(타사 포함) <span class="stat">21.3%</span>. 5G 사용자는 상대적으로 인지도 높음(20~22%). LTE 사용자 인지도는 10~11%에 그침
+              <span class="source-note">※ CSI 2025 상반기 Table I-18-1</span>
+            </div>
+            <div class="sticky ss">
+              <span class="badge bs">S</span>
+              로밍 vs 현지 유심 vs 포켓 와이파이 중 어떤 게 유리한지 네이버·유튜브에서 비교 정보를 찾아봄. 출국 전 SKT 로밍 가입이 필요하다는 것을 인지함
+            </div>
+            <div class="source-note">출처: SKT CSI 2025 / 임원 인터뷰 9 (로밍 상품 포트폴리오) / Web 검색 리서치</div>
+          </td>
+
+          <!-- Step 2 -->
+          <td class="cell">
+            <div class="sticky sk">
+              <span class="badge bk">K</span>
+              Tworld 앱 또는 웹사이트를 열어 로밍 메뉴를 찾으려 함. 메인 화면에서 '로밍·해외' 카테고리를 탐색하며 진입 경로를 파악함. 20~30대 고객의 매장 방문 감소 추세에 따라 앱 셀프서비스 의존도 증가 (임원 인터뷰 11)
+            </div>
+            <div class="sticky ss">
+              <span class="badge bs">S</span>
+              메뉴 구조가 복잡해 '로밍' 메뉴를 즉시 찾지 못하고 검색창에 "로밍"을 직접 타이핑함. Tworld 앱의 하단 탭이나 메인 배너를 통해 우회 진입 시도
+            </div>
+            <div class="source-note">출처: SKT 임원 인터뷰 11 (20~30대 비대면 증가 트렌드) / Tworld UI 리서치</div>
+          </td>
+
+          <!-- Step 3 -->
+          <td class="cell">
+            <div class="sticky sk">
+              <span class="badge bk">K</span>
+              데이터 로밍 상품 목록(baro 요금제, 데이터 로밍 쿠폰, 음성 로밍 등)을 확인하고 일별 가격과 데이터 한도를 비교함. 여행 일수에 따른 총 비용을 직접 계산해봄
+            </div>
+            <div class="sticky ss">
+              <span class="badge bs">S</span>
+              단기(1~7일) 플랜과 월정액 플랜의 가격 차이를 인지. 상품 설명에서 '망내 할인', '망외 요금' 등 통신 전문 용어를 이해하기 어려워 반복해서 읽음
+            </div>
+            <div class="source-note">출처: 로밍 가격 비교 리서치 (단기 플랜 30% 비쌈) / 임원 인터뷰 7 (서비스 복잡성)</div>
+          </td>
+
+          <!-- Step 4 -->
+          <td class="cell">
+            <div class="sticky sk">
+              <span class="badge bk">K</span>
+              원하는 로밍 상품을 선택 후 '가입하기' 버튼을 탭함. 본인 인증 과정(PASS 앱 또는 SMS 인증)을 거쳐 최종 신청을 완료함
+            </div>
+            <div class="sticky ss">
+              <span class="badge bs">S</span>
+              가입 신청 중 SIM 보안 서비스 가입 여부 확인 팝업이 등장하거나, 특정 부가서비스 해지 필요 안내가 뜨는 경우 당황하여 프로세스가 중단됨
+            </div>
+            <div class="source-note">출처: Web 리서치 (SIM 보안서비스 충돌 이슈) / 임원 인터뷰 2 (앱 사용 불편 위험)</div>
+          </td>
+
+          <!-- Step 5 -->
+          <td class="cell">
+            <div class="sticky sk">
+              <span class="badge bk">K</span>
+              Tworld에서 가입 완료 SMS 또는 앱 알림을 확인함. 단말기 설정에서 '데이터 로밍 허용'을 켜고, 자동 업데이트·백업 앱의 와이파이 전용 설정으로 전환함
+            </div>
+            <div class="sticky ss">
+              <span class="badge bs">S</span>
+              설정 방법을 Tworld에서 안내받지 못해 유튜브나 네이버 블로그에서 별도 검색("아이폰 로밍 설정 방법", "갤럭시 로밍 설정"). 출국 당일 공항에서 부랴부랴 확인하는 경우 많음
+            </div>
+            <div class="source-note">출처: Web 리서치 (출국 전 설정 불안) / SKT 뉴스룸 로밍 가이드</div>
+          </td>
+
+          <!-- Step 6 -->
+          <td class="cell">
+            <div class="sticky sk">
+              <span class="badge bk">K</span>
+              도착 후 자동으로 현지 통신망에 연결되길 기대하며 스마트폰을 켬. 데이터가 연결되면 카카오톡·구글 맵을 사용하고, 연결이 안 되면 문제를 직접 해결하려 시도함
+            </div>
+            <div class="sticky ss">
+              <span class="badge bs">S</span>
+              일부 국가에서 자동 망 접속 실패 시 수동으로 네트워크를 검색하거나 비행기 모드를 껐다 켬. 데이터 사용량이 얼마나 됐는지 실시간으로 알 수 없어 불안함을 느낌
+            </div>
+            <div class="source-note">출처: Web 리서치 (수동 네트워크 전환, 실시간 요금 확인 불가) / SKT Roamight 가이드</div>
+          </td>
+
+          <!-- Step 7 -->
+          <td class="cell">
+            <div class="sticky sk">
+              <span class="badge bk">K</span>
+              귀국 후 Tworld 앱에서 로밍 요금 청구 내역을 확인함. 예상보다 높은 요금이 청구된 경우 고객센터에 문의하거나 청구서 상세 내역을 살펴봄
+            </div>
+            <div class="sticky ss">
+              <span class="badge bs">S</span>
+              로밍 상품이 자동으로 만료되지 않거나, 해지 방법을 몰라 다음 달도 과금될까 봐 Tworld에서 수동 해지 처리를 진행함
+            </div>
+            <div class="source-note">출처: Web 리서치 (자동해지 미처리로 재청구) / SKT CSI 데이터</div>
+          </td>
+        </tr>
+
+        <!-- ─── FEELING ─── -->
+        <tr>
+          <td class="row-label rl-feeling">
+            <span class="rl-icon">💬</span>
+            <span class="rl-text">Feeling<br>감정</span>
+          </td>
+
+          <!-- Step 1 -->
+          <td class="cell">
+            <div class="sticky sq">
+              <span class="badge bk">K</span>
+              "로밍 요금이 얼마나 나올지 모르겠어, 그냥 현지 유심 사는 게 나을까?"
+            </div>
+            <div class="sticky ss">
+              <span class="badge bs">S</span>
+              정보가 너무 많고 옵션도 많아 선택 피로를 느낌. 잘못 선택하면 큰 요금이 나올 것 같다는 막연한 불안감
+            </div>
+          </td>
+
+          <!-- Step 2 -->
+          <td class="cell">
+            <div class="sticky sq">
+              <span class="badge bk">K</span>
+              "로밍 메뉴가 어디 있지? 통신 앱은 왜 이렇게 복잡하게 만들어 놨지?"
+            </div>
+            <div class="sticky ss">
+              <span class="badge bs">S</span>
+              Tworld 앱이 기능은 많은데 원하는 걸 찾기 어렵다는 답답함. 첫 화면부터 로밍 배너가 보이면 좋겠다는 생각
+            </div>
+          </td>
+
+          <!-- Step 3 -->
+          <td class="cell">
+            <div class="sticky sq">
+              <span class="badge bk">K</span>
+              "baro 요금제가 뭔데? 일일 요금이랑 묶음 요금이랑 어떤 차이야?"
+            </div>
+            <div class="sticky sq">
+              <span class="badge bs">S</span>
+              "3박 4일인데 4일짜리 끊어야 해? 3일짜리 끊어야 해? 출국일도 포함되는 건가?"
+            </div>
+          </td>
+
+          <!-- Step 4 -->
+          <td class="cell">
+            <div class="sticky sq">
+              <span class="badge bk">K</span>
+              "신청하려니까 뭔가 다른 서비스 해지하라고 하는데… 그냥 해지하면 괜찮은 건가?"
+            </div>
+            <div class="sticky ss">
+              <span class="badge bs">S</span>
+              신청 도중 예상치 못한 팝업이나 조건이 등장하면서 신뢰감 저하. "이거 해도 되나?" 하는 불확실감
+            </div>
+          </td>
+
+          <!-- Step 5 -->
+          <td class="cell">
+            <div class="sticky sq">
+              <span class="badge bk">K</span>
+              "가입은 됐는데 설정을 제대로 한 건지 모르겠어. 현지 가서 데이터가 안 되면 어쩌지?"
+            </div>
+            <div class="sticky ss">
+              <span class="badge bs">S</span>
+              출발 당일 공항에서도 설정 확인을 반복하며 불안. Tworld가 단계별 설정 가이드를 제공하지 않아 스스로 해결해야 한다는 부담감
+            </div>
+          </td>
+
+          <!-- Step 6 -->
+          <td class="cell">
+            <div class="sticky sq">
+              <span class="badge bk">K</span>
+              "데이터 얼마나 썼지? 요금 한도 초과하면 어떻게 되는 거야?"
+            </div>
+            <div class="sticky ss">
+              <span class="badge bs">S</span>
+              연결은 됐지만 속도가 느리거나 끊기면 "내가 설정을 잘못한 건지, 원래 이런 건지" 구분이 안 돼 답답함. 여행에 집중하지 못하고 핸드폰 화면만 들여다보게 됨
+            </div>
+          </td>
+
+          <!-- Step 7 -->
+          <td class="cell">
+            <div class="sticky sq">
+              <span class="badge bk">K</span>
+              "청구서에 로밍 요금이 기대보다 많이 나왔네. 어떤 항목에서 이렇게 나온 거지?"
+            </div>
+            <div class="sticky ss">
+              <span class="badge bs">S</span>
+              해지를 안 하면 다음 달에도 요금이 붙을까봐 걱정. 자동 해지가 됐는지 확인하기 위해 Tworld를 재접속함
+            </div>
+          </td>
+        </tr>
+
+        <!-- ─── PAINPOINT ─── -->
+        <tr>
+          <td class="row-label rl-pain">
+            <span class="rl-icon">⚡</span>
+            <span class="rl-text">Pain<br>point</span>
+          </td>
+
+          <!-- Step 1 -->
+          <td class="cell">
+            <div class="sticky sk">
+              <span class="badge bk">K</span>
+              SKT 로밍 vs 현지 유심 vs 포켓 와이파이 등 대안 정보가 SKT 공식 채널 밖에 더 풍부해, SKT 채널 이탈이 시작되는 시점
+            </div>
+            <div class="sticky ss">
+              <span class="badge bs">S</span>
+              SKT 앱·웹에서 '여행 전 로밍 준비' 콘텐츠 노출이 부족. 개인화된 추천 없이 일반 배너만 노출됨
+            </div>
+          </td>
+
+          <!-- Step 2 -->
+          <td class="cell">
+            <div class="sticky sk">
+              <span class="badge bk">K</span>
+              온·오프라인 채널 간 일관성 부족. 로밍 메뉴 구조가 직관적이지 않아 탐색 단계에서 이탈률 높음
+              <div class="source-note">출처: SKT 임원 인터뷰 11 (T멤버십-Tworld 연결성 낮음)</div>
+            </div>
+            <div class="sticky ss">
+              <span class="badge bs">S</span>
+              Tworld 앱이 한국어 전용 구조로, 로밍처럼 해외 관련 정보가 필요한 상황에서 영어 전환 등 글로벌 UX 부재
+            </div>
+          </td>
+
+          <!-- Step 3 -->
+          <td class="cell">
+            <div class="sticky sk">
+              <span class="badge bk">K</span>
+              상품이 많고 이름이 유사(baro 데이터 1일, baro 데이터 3일 등)해 선택 혼란 유발. 내 요금제에 따른 추천 기능 없음
+              <div class="source-note">출처: SKT 임원 인터뷰 7 (서비스 복잡도 높음)</div>
+            </div>
+            <div class="sticky ss">
+              <span class="badge bs">S</span>
+              단기 플랜은 월정액 대비 약 30% 비싸지만 비교 기준 없이 가격만 나열됨. '며칠 여행이면 어떤 게 유리한지' 계산기 미제공
+            </div>
+          </td>
+
+          <!-- Step 4 -->
+          <td class="cell">
+            <div class="sticky sk">
+              <span class="badge bk">K</span>
+              SIM 보안 서비스 등 특정 부가서비스 가입 상태에서 로밍 신청 시 충돌 발생. 사용자가 어떤 서비스를 해지해야 하는지 명확히 안내받지 못함
+              <div class="source-note">출처: Web 리서치 (SIM 보안-로밍 충돌 이슈)</div>
+            </div>
+            <div class="sticky ss">
+              <span class="badge bs">S</span>
+              가입 완료 후 확인 SMS가 즉시 오지 않거나 앱에서 가입 상태가 바로 반영되지 않아 이중 신청 우려
+            </div>
+          </td>
+
+          <!-- Step 5 -->
+          <td class="cell">
+            <div class="sticky sk">
+              <span class="badge bk">K</span>
+              가입 완료 후 단말 설정 방법이 Tworld 앱 내에서 제공되지 않아 사용자가 외부에서 정보를 찾아야 함
+              <div class="source-note">출처: SKT 임원 인터뷰 6 (디지털 채널 사후 만족도 하락)</div>
+            </div>
+            <div class="sticky ss">
+              <span class="badge bs">S</span>
+              아이폰·갤럭시 별 설정 방법이 다름에도 기종별 맞춤 가이드 미제공. '데이터 로밍 켜기'만 안내하고 앱 자동업데이트 차단 등 실비용 절감 팁 없음
+            </div>
+          </td>
+
+          <!-- Step 6 -->
+          <td class="cell">
+            <div class="sticky sk">
+              <span class="badge bk">K</span>
+              실시간 데이터 사용량 및 요금 확인이 불가능 (해외 통신사의 과금 데이터 지연 전송 문제). 한도 초과 알림이 늦게 오거나 안 옴
+              <div class="source-note">출처: SKT 임원 인터뷰 7 (레거시 시스템 한계) / Web 리서치</div>
+            </div>
+            <div class="sticky ss">
+              <span class="badge bs">S</span>
+              현지 망 연결 실패 시 자동 복구 기능 없음. 비행기 모드 껐다 켜기, USIM 재삽입 등 사용자가 직접 트러블슈팅 해야 하는 불편
+            </div>
+          </td>
+
+          <!-- Step 7 -->
+          <td class="cell">
+            <div class="sticky sk">
+              <span class="badge bk">K</span>
+              로밍 요금 항목(데이터/음성/문자 각각)이 청구서에서 명확히 구분되지 않아 과다 청구 여부 판단 어려움. <strong>해외 로밍 할인 서비스 만족도 평균 <span class="stat">7.91/100</span></strong> (최저 4.2 ~ 최고 10.2, 세그먼트별 편차 큼)
+              <div class="source-note">출처: SKT CSI 2025 상반기 (해외 로밍 할인 항목) / 임원 인터뷰 6</div>
+            </div>
+            <div class="sticky ss">
+              <span class="badge bs">S</span>
+              로밍 상품이 자동 만료되는 상품과 수동 해지가 필요한 상품이 혼재하여 혼란. 해지 후에도 요금이 청구되는 사례 발생
+            </div>
+          </td>
+        </tr>
+
+        <!-- ─── NEEDS ─── -->
+        <tr>
+          <td class="row-label rl-needs">
+            <span class="rl-icon">💡</span>
+            <span class="rl-text">Needs<br>요구사항</span>
+          </td>
+
+          <!-- Step 1 -->
+          <td class="cell">
+            <div class="sticky sk">
+              <span class="badge bk">K</span>
+              <strong>여행지·기간 기반 로밍 상품 자동 추천</strong><br>목적지 국가와 체류 기간을 입력하면 최적 로밍 상품을 알아서 제안해주기를 원함
+            </div>
+            <div class="sticky sp">
+              <span class="badge bs">S</span>
+              <strong>[잠재 Needs]</strong> 로밍 vs 현지 유심 비교 정보를 SKT 공식 채널에서도 중립적으로 제공해 신뢰감을 높여주길 원함
+            </div>
+          </td>
+
+          <!-- Step 2 -->
+          <td class="cell">
+            <div class="sticky sk">
+              <span class="badge bk">K</span>
+              <strong>출국일 감지 기반 로밍 배너 자동 노출</strong><br>항공편 예매나 일정 데이터를 활용해 Tworld 메인에 로밍 준비 유도 배너 노출
+            </div>
+            <div class="sticky sp">
+              <span class="badge bs">S</span>
+              <strong>[잠재 Needs]</strong> "로밍" 한 단어로 바로 진입 가능한 딥링크, 또는 홈 화면 빠른 메뉴에 고정 노출
+            </div>
+          </td>
+
+          <!-- Step 3 -->
+          <td class="cell">
+            <div class="sticky sk">
+              <span class="badge bk">K</span>
+              <strong>내 여행 일정에 맞는 상품 자동 계산</strong><br>"3박 4일 일본 여행"을 입력하면 최적 상품과 예상 총 비용을 한눈에 보여주는 계산기 기능
+            </div>
+            <div class="sticky sp">
+              <span class="badge bs">S</span>
+              <strong>[잠재 Needs]</strong> 통신 전문 용어 없이 일반 언어로 설명된 상품 카드 UI. "하루에 1GB, 3일 동안" 식의 심플한 표현
+            </div>
+          </td>
+
+          <!-- Step 4 -->
+          <td class="cell">
+            <div class="sticky sk">
+              <span class="badge bk">K</span>
+              <strong>가입 전 사전 점검 기능</strong><br>"내 부가서비스 중 로밍 가입에 영향을 주는 게 있는지" 자동으로 체크하고 원클릭 정리
+            </div>
+            <div class="sticky sp">
+              <span class="badge bs">S</span>
+              <strong>[잠재 Needs]</strong> 가입 신청 후 즉각적인 상태 확인 (앱 내 실시간 가입 상태 표시). SMS가 아닌 앱 푸시로 즉시 알림
+            </div>
+          </td>
+
+          <!-- Step 5 -->
+          <td class="cell">
+            <div class="sticky sk">
+              <span class="badge bk">K</span>
+              <strong>기종별 단말 설정 가이드 제공</strong><br>가입 완료 직후, 아이폰/갤럭시 기종을 인식해 맞춤 설정 체크리스트를 앱 내에서 바로 제공
+            </div>
+            <div class="sticky sp">
+              <span class="badge bs">S</span>
+              <strong>[잠재 Needs]</strong> "현지에서 불필요한 데이터 소모 방지" 팁(앱 자동업데이트 OFF, iCloud 백업 와이파이 전용 등)까지 포함한 절약 가이드
+            </div>
+          </td>
+
+          <!-- Step 6 -->
+          <td class="cell">
+            <div class="sticky sk">
+              <span class="badge bk">K</span>
+              <strong>실시간 데이터 사용량 및 요금 현황 표시</strong><br>Tworld 앱에서 "현재까지 ○○원 사용 중" 형태로 실시간 모니터링 기능 제공
+            </div>
+            <div class="sticky sp">
+              <span class="badge bs">S</span>
+              <strong>[잠재 Needs]</strong> 연결 실패 시 앱 내 원클릭 자가해결(트러블슈팅) 가이드. "지금 데이터가 안 되시나요?" 버튼 하나로 진단·해결
+            </div>
+          </td>
+
+          <!-- Step 7 -->
+          <td class="cell">
+            <div class="sticky sk">
+              <span class="badge bk">K</span>
+              <strong>로밍 요금 항목별 투명한 청구서</strong><br>데이터·음성·문자별 사용량과 요금을 시각화한 청구서. "어디서 얼마 썼는지" 날짜별 상세 내역
+            </div>
+            <div class="sticky sp">
+              <span class="badge bs">S</span>
+              <strong>[잠재 Needs]</strong> 귀국 감지 후 로밍 상품 자동 해지 알림 또는 원클릭 해지. "귀국하셨나요? 로밍 정리하기" 푸시
+            </div>
+          </td>
+        </tr>
+
+        <!-- ─── INSIGHT ─── -->
+        <tr>
+          <td class="row-label rl-insight">
+            <span class="rl-icon">🚀</span>
+            <span class="rl-text">Insight<br>기회/솔루션</span>
+          </td>
+
+          <!-- Step 1 -->
+          <td class="cell">
+            <div class="sticky si">
+              <span class="badge bi">I</span>
+              <strong>여행 정보 연동 로밍 큐레이션</strong><br>항공 예매 앱(네이버·카카오 등)과 연동하거나, 사용자 캘린더에서 출국 일정을 감지해 Tworld가 선제적으로 "○월 ○일 출국 예정, 로밍 준비하세요" 알림을 발송하는 AI 에이전트형 알림 서비스
+            </div>
+          </td>
+
+          <!-- Step 2 -->
+          <td class="cell">
+            <div class="sticky si">
+              <span class="badge bi">I</span>
+              <strong>로밍 전용 숏컷 &amp; 스마트 진입 UX</strong><br>Tworld 앱 홈에 '✈ 로밍 준비' 고정 아이콘 배치. 출국 D-7 이내 접속 시 로밍 준비 팝업 자동 노출. 검색창 "로밍" 타이핑 시 즉시 상품 리스트로 딥링크
+            </div>
+          </td>
+
+          <!-- Step 3 -->
+          <td class="cell">
+            <div class="sticky si">
+              <span class="badge bi">I</span>
+              <strong>여행 일정 기반 로밍 상품 시뮬레이터</strong><br>목적지 국가·여행 기간·사용 패턴(SNS 중심 vs 지도 내비 중심 vs 영상 스트리밍 등)을 입력하면 "예상 요금 ○○원, 추천 상품 ○○" 형태로 최적 플랜을 추천. 경쟁사 현지유심 비용과도 투명 비교 제공
+            </div>
+          </td>
+
+          <!-- Step 4 -->
+          <td class="cell">
+            <div class="sticky si">
+              <span class="badge bi">I</span>
+              <strong>가입 前 충돌 서비스 자동 진단 &amp; 해결 플로우</strong><br>"가입하기" 클릭 시 먼저 내 부가서비스를 스캔해 충돌 요소를 알려주고, "○○ 서비스를 임시 해지 후 로밍 가입 → 귀국 후 자동 재가입" 원클릭 플로우 제공
+            </div>
+          </td>
+
+          <!-- Step 5 -->
+          <td class="cell">
+            <div class="sticky si">
+              <span class="badge bi">I</span>
+              <strong>가입 완료 후 '출국 준비 체크리스트' 인앱 가이드</strong><br>로밍 가입 완료 직후 "3단계 출국 준비" 카드형 가이드 표시. ① 단말 데이터 로밍 ON ② 앱 자동업데이트 OFF ③ 이메일·클라우드 와이파이 전용 설정. 기종(iOS/Android) 자동 감지 후 스크린샷 기반 안내
+            </div>
+          </td>
+
+          <!-- Step 6 -->
+          <td class="cell">
+            <div class="sticky si">
+              <span class="badge bi">I</span>
+              <strong>실시간 로밍 미터 &amp; AI 절약 코치</strong><br>Tworld 앱 위젯으로 "오늘 ○○MB 사용 / 잔여 ○○원" 실시간 표시. 속도 저하·연결 오류 감지 시 자동 트러블슈팅 가이드 푸시. "현재 위치에서 무료 Wi-Fi 근처" 안내 기능 연동
+            </div>
+          </td>
+
+          <!-- Step 7 -->
+          <td class="cell">
+            <div class="sticky si">
+              <span class="badge bi">I</span>
+              <strong>귀국 감지 자동 해지 + 투명 청구서</strong><br>국내 통신망 재연결 감지 시 "귀국하셨나요? 로밍 서비스 정리하기" 푸시 1회 발송 후 원클릭 해지. 청구서는 여행지별·날짜별·항목별 시각화 리포트로 제공. 다음 여행을 위한 "이번 여행 로밍 총 비용 ○○원, 더 저렴한 옵션이 있어요" 피드백 제공
+            </div>
+          </td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div><!-- /table-wrap -->
+
+  <!-- Source footer -->
+  <div style="margin-top:16px;padding:12px 18px;background:#fff;border-radius:12px;border:1px solid #e8e8e8;font-size:10px;color:#777;line-height:1.8;">
+    <strong style="color:#333;">📎 데이터 출처</strong><br>
+    <span style="background:var(--yellow);border-radius:3px;padding:1px 5px;margin-right:4px;font-weight:700;color:#5a4900;">K</span> SKT 임원 인터뷰 시리즈 (2026.01~02) — 인터뷰 2(BSS개발), 6(고객인사이트), 7(AT/DT 서비스개발), 9(요금·멤버십·브랜드), 11(채널·디바이스) /  SKT 사용자 정기 CSI 2025<br>
+    <span style="background:var(--blue);border-radius:3px;padding:1px 5px;margin-right:4px;font-weight:700;color:#fff;">S</span> SKT 뉴스룸 로밍 가이드 / Tworld 로밍 페이지 / Roamight 2025 Korea Roaming Guide / Simology 로밍 절약 블로그 / Tripadvisor 서울 포럼 로밍 후기<br>
+    <span style="background:#555;border-radius:3px;padding:1px 5px;margin-right:4px;font-weight:700;color:#fff;">CSI</span> 해외 로밍 할인 만족도 평균 <strong>7.91/100</strong> (CSI 2025 상반기) · 클럽 T로밍 인지도 SKT 사용자 <strong>31.1%</strong> · 최근 1년 해외 방문 SKT 사용자 <strong>2,700명</strong>/6,000명
+  </div>
+
+</div><!-- /canvas -->
+</body>
+</html>

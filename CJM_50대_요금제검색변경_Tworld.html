@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CJM | 50대 요금제 검색 및 변경 | Tworld</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+    background: #f0f2f5;
+    color: #1a1a1a;
+    min-height: 100vh;
+  }
+
+  /* ── Top bar ── */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: #fff;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08);
+  }
+  .topbar-logo { font-size: 20px; font-weight: 800; color: #E4003A; letter-spacing: -1px; }
+  .topbar-sep { color: #ccc; }
+  .topbar-title { font-size: 14px; font-weight: 600; color: #333; }
+  .topbar-tag {
+    background: #f5e6ff; color: #7c3aed;
+    font-size: 11px; font-weight: 700;
+    padding: 2px 8px; border-radius: 99px;
+    margin-left: auto;
+  }
+  .topbar-date { font-size: 11px; color: #999; }
+
+  /* ── Legend ── */
+  .legend {
+    display: flex; gap: 16px; align-items: center;
+    padding: 10px 24px;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+    flex-wrap: wrap;
+  }
+  .legend-label { font-size: 12px; font-weight: 700; color: #555; margin-right: 4px; }
+  .legend-item {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; color: #555;
+  }
+  .legend-dot {
+    width: 12px; height: 12px; border-radius: 3px;
+  }
+  .dot-data { background: #fff9c4; border: 1.5px solid #f9a825; }
+  .dot-search { background: #e8f5e9; border: 1.5px solid #43a047; }
+  .dot-both { background: #fff3e0; border: 1.5px solid #ef6c00; }
+
+  /* ── Main canvas ── */
+  .canvas {
+    padding: 24px;
+    overflow-x: auto;
+  }
+
+  /* ── Query section ── */
+  .query-section {
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    border-left: 5px solid #E4003A;
+  }
+  .query-label { font-size: 11px; font-weight: 700; color: #E4003A; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .query-chip {
+    display: inline-block;
+    background: #fff0f3; color: #E4003A;
+    border: 1.5px solid #ffc2cc;
+    border-radius: 99px;
+    padding: 4px 14px;
+    font-size: 13px; font-weight: 700;
+    margin: 3px 4px 3px 0;
+  }
+  .query-arrow { color: #ccc; font-size: 18px; vertical-align: middle; margin: 0 4px; }
+
+  /* ── CJM table ── */
+  .cjm-wrapper {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.08);
+    overflow: hidden;
+  }
+
+  .cjm-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: 1400px;
+  }
+
+  /* Row header col */
+  .row-header {
+    width: 120px;
+    min-width: 120px;
+    padding: 14px 12px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 800;
+    vertical-align: middle;
+    border-right: 2px solid #f0f0f0;
+    position: sticky;
+    left: 0;
+    z-index: 10;
+  }
+
+  /* Column header row */
+  .col-header {
+    background: #1a1a2e;
+    color: #fff;
+    text-align: center;
+    padding: 14px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    border-right: 1px solid #2a2a4e;
+    vertical-align: middle;
+  }
+  .col-header:first-child {
+    background: #0f0f23;
+    font-size: 13px;
+    border-right: 2px solid #2a2a4e;
+    width: 120px;
+    position: sticky;
+    left: 0;
+    z-index: 20;
+  }
+  .step-num {
+    display: inline-block;
+    background: #E4003A;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    border-radius: 50%;
+    width: 20px; height: 20px;
+    line-height: 20px;
+    text-align: center;
+    margin-bottom: 4px;
+  }
+  .step-name { display: block; font-size: 11px; margin-top: 2px; }
+
+  /* journey phase bar */
+  .phase-row td {
+    border-bottom: 2px solid #e8e8e8;
+  }
+  .phase-cell {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 8px 10px;
+    text-align: center;
+    border-right: 1px solid rgba(255,255,255,.2);
+  }
+
+  /* Data cells */
+  td.cell {
+    padding: 10px;
+    vertical-align: top;
+    border-right: 1px solid #f0f0f0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  /* Row label colours */
+  .rh-action   { background: #e3f2fd; color: #1565c0; }
+  .rh-feeling  { background: #fff8e1; color: #e65100; }
+  .rh-pain     { background: #fce4ec; color: #c62828; }
+  .rh-needs    { background: #f3e5f5; color: #6a1b9a; }
+  .rh-insight  { background: #e8f5e9; color: #2e7d32; }
+
+  /* Sticky note style items */
+  .note {
+    display: block;
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    font-size: 11px;
+    line-height: 1.5;
+    position: relative;
+  }
+  /* Knowledge-based (Agent3) = yellow highlight */
+  .note-data {
+    background: #fffde7;
+    border: 1.5px solid #f9a825;
+    box-shadow: 2px 2px 0 rgba(249,168,37,.2);
+  }
+  /* Search-based (Agent4) = green */
+  .note-search {
+    background: #f1f8e9;
+    border: 1.5px solid #7cb342;
+    box-shadow: 2px 2px 0 rgba(124,179,66,.2);
+  }
+  .note-icon {
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 3px;
+    padding: 1px 5px;
+    display: inline-block;
+    margin-bottom: 3px;
+  }
+  .icon-data   { background: #f9a825; color: #fff; }
+  .icon-search { background: #7cb342; color: #fff; }
+
+  .source-tag {
+    display: inline-block;
+    font-size: 9px;
+    color: #999;
+    margin-top: 4px;
+    font-style: italic;
+  }
+
+  /* Emotion bar */
+  .emotion-row td { border-bottom: 3px solid #e8e8e8; }
+  .emotion-bar-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 4px;
+    height: 48px;
+    font-size: 20px;
+  }
+
+  /* Feeling quotes */
+  .quote {
+    font-style: italic;
+    color: #555;
+    font-size: 11px;
+    line-height: 1.5;
+    padding: 6px 8px;
+    border-left: 3px solid #ffb300;
+    background: #fffde7;
+    border-radius: 0 6px 6px 0;
+    margin-bottom: 6px;
+  }
+
+  /* journey flow arrows */
+  .arrow-row td { padding: 4px 0; background: #fafafa; border-bottom: 1px solid #f0f0f0; }
+  .arrow-cell { text-align: center; font-size: 18px; color: #E4003A; }
+
+  /* channel tag */
+  .channel-tag {
+    display: inline-block;
+    background: #E4003A; color: #fff;
+    font-size: 10px; font-weight: 700;
+    padding: 2px 8px; border-radius: 99px;
+    margin-bottom: 6px;
+  }
+
+  .percent-badge {
+    display: inline-block;
+    background: #1565c0; color: #fff;
+    font-size: 10px; font-weight: 800;
+    padding: 1px 7px; border-radius: 99px;
+  }
+  .percent-badge-red {
+    background: #c62828;
+  }
+  .percent-badge-green {
+    background: #2e7d32;
+  }
+
+  /* footer */
+  .footer-row {
+    background: #fafafa;
+  }
+  .footer-cell {
+    padding: 16px 12px;
+    font-size: 11px;
+    color: #888;
+    text-align: center;
+    border-top: 2px solid #eee;
+  }
+
+  @media print {
+    .topbar { position: relative; }
+    body { background: #fff; }
+    .cjm-wrapper { box-shadow: none; border: 1px solid #ddd; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <span class="topbar-logo">SKT</span>
+  <span class="topbar-sep">|</span>
+  <span class="topbar-title">Customer Journey Map &nbsp;·&nbsp; 50대 요금제 검색 및 변경 (Tworld)</span>
+  <span class="topbar-tag">🤖 AI 자동 생성</span>
+  <span class="topbar-date">2025 CSI 데이터 기반 &nbsp;·&nbsp; 2026.02.24</span>
+</div>
+
+<!-- LEGEND -->
+<div class="legend">
+  <span class="legend-label">데이터 출처:</span>
+  <div class="legend-item">
+    <div class="legend-dot dot-data"></div>
+    <span><strong>Knowledge 기반</strong> — SKT 사용자 정기 CSI 2025</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-dot dot-search"></div>
+    <span><strong>검색 기반</strong> — 업계 리서치 / 일반 UX 인사이트</span>
+  </div>
+</div>
+
+<div class="canvas">
+
+  <!-- Query Expansion Block -->
+  <div class="query-section">
+    <div class="query-label">🔍 에이전트 1 · 쿼리 확장</div>
+    <p style="font-size:12px;color:#666;margin-bottom:10px;">입력: <strong>50대 요금제 검색 및 변경</strong> &nbsp;→&nbsp; 아래 3가지 여정으로 확장 (현재 페이지: Tworld 여정)</p>
+    <span class="query-chip">① {50대 중장년층}의 {Tworld}에서 {요금제 검색 및 변경} 여정</span>
+    <span class="query-chip">② {50대 중장년층}의 {고객센터}에서 {요금제 검색 및 변경} 여정</span>
+    <span class="query-chip">③ {50대 중장년층}의 {대리점}에서 {요금제 검색 및 변경} 여정</span>
+  </div>
+
+  <!-- CJM Table -->
+  <div class="cjm-wrapper">
+    <table class="cjm-table">
+      <thead>
+        <tr>
+          <th class="col-header">여정 단계</th>
+          <th class="col-header">
+            <div class="step-num">1</div>
+            <span class="step-name">필요성 인식</span>
+          </th>
+          <th class="col-header">
+            <div class="step-num">2</div>
+            <span class="step-name">정보 탐색</span>
+          </th>
+          <th class="col-header">
+            <div class="step-num">3</div>
+            <span class="step-name">Tworld 접속</span>
+          </th>
+          <th class="col-header">
+            <div class="step-num">4</div>
+            <span class="step-name">요금제 검색·비교</span>
+          </th>
+          <th class="col-header">
+            <div class="step-num">5</div>
+            <span class="step-name">요금제 선택</span>
+          </th>
+          <th class="col-header">
+            <div class="step-num">6</div>
+            <span class="step-name">변경 신청</span>
+          </th>
+          <th class="col-header">
+            <div class="step-num">7</div>
+            <span class="step-name">완료 확인</span>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+
+        <!-- ── USER ACTION ── -->
+        <tr>
+          <td class="row-header rh-action">👆<br>User<br>Action</td>
+
+          <!-- Step 1 -->
+          <td class="cell">
+            <span class="note note-data">
+              <span class="note-icon icon-data">K</span><br>
+              현재 요금제 가입 후 변경일이 도래하거나, 청구서를 보고 요금이 비싸다는 것을 인지함. "더 좋은 혜택을 위해 변경 필요"를 인식.
+              <span class="source-tag">※ 표385 F-4-2: 더 좋은 혜택 필요 시 20.5%, 변경 가능일 도래 28.0%</span>
+            </span>
+            <span class="note note-search">
+              <span class="note-icon icon-search">S</span><br>
+              지인이 요금제를 바꿔 절약했다는 이야기를 듣고 자신도 알아보고 싶다는 동기 발생.
+            </span>
+          </td>
+
+          <!-- Step 2 -->
+          <td class="cell">
+            <span class="note note-data">
+              <span class="note-icon icon-data">K</span><br>
+              Tworld 앱/홈페이지를 통해 요금제 종류 사전 탐색. 통신사 모바일/온라인 앱/웹 이용률 <span class="percent-badge">36.5%</span>
+              <span class="source-tag">※ 표123 B-4-1: 요금제 알아본 채널 (상반기)</span>
+            </span>
+            <span class="note note-search">
+              <span class="note-icon icon-search">S</span><br>
+              네이버·유튜브 등 외부 검색 통해 "SKT 요금제 비교", "50대 통신비 절약" 키워드 검색. 요금제 비교 앱도 확인.
+            </span>
+          </td>
+
+          <!-- Step 3 -->
+          <td class="cell">
+            <span class="note note-data">
+              <span class="note-icon icon-data">K</span><br>
+              Tworld 앱을 실행. 로그인이 되어있지 않으면 본인인증 과정 수행. 요금제 혜택 확인을 위해 앱 진입.
+              <span class="source-tag">※ 표403 F-7-3: 통신사 온라인 채널 48.5%가 혜택 확인 채널로 활용</span>
+            </span>
+            <span class="note note-search">
+              <span class="note-icon icon-search">S</span><br>
+              홈 화면에서 '요금제' 메뉴 위치를 파악하려 탭 탐색. 메뉴 구조가 낯설어 여러 번 탭 이동.
+            </span>
+          </td>
+
+          <!-- Step 4 -->
+          <td class="cell">
+            <span class="note note-data">
+              <span class="note-icon icon-data">K</span><br>
+              요금제 목록을 스크롤하며 현재 요금제와 신규 요금제 비교. 혜택 내용(OTT, 할인 등)을 확인하려 시도.
+              <span class="source-tag">※ 표399 F-7: 현재 요금제 구성 및 혜택 인지 여부 / 표400 F-7-1: 혜택 모르는 이유 '어렵게 느껴져서' 11.9%</span>
+            </span>
+            <span class="note note-search">
+              <span class="note-icon icon-search">S</span><br>
+              요금제 리스트에서 가격, 데이터, 부가혜택 항목을 손으로 짚어가며 비교. 화면 캡처 후 가족에게 공유하여 의견 수렴.
+            </span>
+          </td>
+
+          <!-- Step 5 -->
+          <td class="cell">
+            <span class="note note-data">
+              <span class="note-icon icon-data">K</span><br>
+              직원 추천 없이 혼자 선택해야 하는 상황. "나에게 가장 적합한 요금제" 기준이 불명확해 결정을 미루거나 기존 요금제 유지.
+              <span class="source-tag">※ 표125 B-5: 요금제 선택 이유, 직원 추천 44.8% / 맞는 요금제 없음 3.3%</span>
+            </span>
+            <span class="note note-search">
+              <span class="note-icon icon-search">S</span><br>
+              데이터 사용량 기반 추천 기능이 없어 직접 최근 사용량을 확인하고 계산하려 함. 계산기 앱을 별도로 실행.
+            </span>
+          </td>
+
+          <!-- Step 6 -->
+          <td class="cell">
+            <span class="note note-data">
+              <span class="note-icon icon-data">K</span><br>
+              Tworld 앱에서 요금제 변경 버튼 탭. 본인 확인 절차(PIN, 생체인증) 수행 후 변경 신청.
+              <span class="source-tag">※ 표386 F-4: 앱/홈페이지 통한 요금제 변경 7.1% (변경자 중)</span>
+            </span>
+            <span class="note note-search">
+              <span class="note-icon icon-search">S</span><br>
+              변경 버튼을 찾지 못해 고객센터 채팅 또는 전화로 전환하는 경우 발생. 중간 이탈 경험.
+            </span>
+          </td>
+
+          <!-- Step 7 -->
+          <td class="cell">
+            <span class="note note-data">
+              <span class="note-icon icon-data">K</span><br>
+              변경 완료 문자/앱 알림 수신. Tworld 앱에서 변경된 요금제 및 혜택 항목 재확인.
+              <span class="source-tag">※ 표407 F-8-1: 음원/OTT 혜택 등록 과정 불편 25.6%</span>
+            </span>
+            <span class="note note-search">
+              <span class="note-icon icon-search">S</span><br>
+              새 요금제에 포함된 OTT/부가 서비스 혜택을 별도로 활성화하는 방법을 몰라 혜택 미사용.
+            </span>
+          </td>
+        </tr>
+
+        <!-- ── FEELING ── -->
+        <tr>
+          <td class="row-header rh-feeling">💬<br>Feeling</td>
+
+          <td class="cell">
+            <div class="quote">"매달 이 금액이 맞는 건지 모르겠어. 너무 비싼 거 아냐?"</div>
+            <span class="note note-data">
+              <span class="note-icon icon-data">K</span><br>
+              요금제 선택의 적절성에 대한 막연한 불안감. 통신비가 과다하게 지출되는 건지 확신 없음.
+              <span class="source-tag">※ 표129 B-5-2: 불필요하게 비싼 요금제 가입한 것 같음 3.2%</span>
+            </span>
+          </td>
+
+          <td class="cell">
+            <div class="quote">"어디서 봐야 하지? 비교 사이트가 너무 복잡해"</div>
+            <span class="note note-search">
+              <span class="note-icon icon-search">S</span><br>
+              외부 검색 결과가 너무 많고 비교 기준이 제각각이라 혼란스러움. 신뢰할 수 있는 단일 정보 채널을 원함.
+            </span>
+          </td>
+
+          <td class="cell">
+            <div class="quote">"앱이 어딘가에 있을 텐데… 메뉴가 너무 많네"</div>
+            <span class="note note-search">
+              <span class="note-icon icon-search">S</span><br>
+              요금제 탐색 경로가 직관적이지 않아 첫 접근부터 당혹감. 작은 글씨와 복잡한 네비게이션으로 피로 누적.
+            </span>
+          </td>
+
+          <td class="cell">
+            <div class="quote">"이게 나한테 맞는 건지 모르겠어. 혜택이 너무 많아서 뭐가 뭔지…"</div>
+            <span class="note note-data">
+              <span class="note-icon icon-data">K</span><br>
+              요금제 혜택 내용이 복잡하고 용어가 낯설어 이해하기 어렵다는 답답함.
+              <span class="source-tag">※ 표407 F-8-1: 요금제 설명/용어 이해 어려움 30.8%</span>
+            </span>
+          </td>
+
+          <td class="cell">
+            <div class="quote">"누가 추천해줬으면 좋겠는데… 혼자 결정하기 불안해"</div>
+            <span class="note note-data">
+              <span class="note-icon icon-data">K</span><br>
+              전문가(직원) 없이 혼자 결정하는 것에 대한 불안감. 잘못 선택했을 때의 손해 우려.
+              <span class="source-tag">※ 표125 B-5: 요금제 선택 시 직원 추천 의존도 44.8%</span>
+            </span>
+          </td>
+
+          <td class="cell">
+            <div class="quote">"버튼이 어디 있지? 실수로 잘못 누르면 어떡하지?"</div>
+            <span class="note note-search">
+              <span class="note-icon icon-search">S</span><br>
+              변경 프로세스 중 실수에 대한 두려움. 되돌릴 수 없을까봐 조심스러워하며 중간에 멈추는 경우.
+            </span>
+          </td>
+
+          <td class="cell">
+            <div class="quote">"변경은 됐는데… 내가 제대로 한 게 맞나?"</div>
+            <span class="note note-search">
+              <span class="note-icon icon-search">S</span><br>
+              변경 완료 후에도 제대로 처리되었는지 확신이 없음. 혜택 활성화 방법을 몰라 찜찜함 남음.
+            </span>
+          </td>
+        </tr>
+
+        <!-- ── PAINPOINT ── -->
+        <tr>
+          <td class="row-header rh-pain">😣<br>Pain<br>point</td>
+
+          <td class="cell">
+            <span class="note note-data">
+              <span class="note-icon icon-data">K</span><br>
+              요금제 변경이 가능한 시점(약정 만료 등)을 사전에 충분히 안내받지 못함.
+              <span class="source-tag">※ 표133 B-7: 요금제 변경 가능 시점 안내 여부 관련</span>
+            </span>
+            <span class="note note-search">
+              <span class="note-icon icon-search">S</span><br>
+              현재 요금제 대비 더 나은 요금제가 존재하는지 스스로 파악하기 어려움. 비교 기준점 부재.
+            </span>
+          </td>
+
+          <td class="cell">
+            <span class="note note-data">
+              <span class="note-icon icon-data">K</span><br>
+              온라인 검색 결과가 너무 많아 신뢰할 수 있는 정보 식별이 어려움. SKT 공식 정보와 외부 블로그 혼재.
+              <span class="source-tag">※ 표123 B-4-1: 온라인 검색 의존 27.7%이나 정보 과부하 위험</span>
+            </span>
+            <span class="note note-search">
+              <span class="note-icon icon-search">S</span><br>
+              광고성 콘텐츠와 실제 요금제 정보가 섞여 있어 50대가 검증된 정보를 골라내기 어려움.
+            </span>
+          </td>
+
+          <td class="cell">
+            <span class="note note-search">
+              <span class="note-icon icon-search">S</span><br>
+              Tworld 앱 UI 복잡성: 메뉴 depth가 깊고, '요금제 변경' 진입 경로가 직관적이지 않음. 고령층 접근성 부족.
+            </span>
+            <span class="note note-data">
+              <span class="note-icon icon-data">K</span><br>
+              앱 내 작은 글씨, 아이콘 위주 UX가 50대 중장년층에게 불편함 야기.
+              <span class="source-tag">※ 표163 B-16-1: 직원 어려운 용어 사용 불편 20.8% (오프라인 유사 패턴)</span>
+            </span>
+          </td>
+
+          <td class="cell">
+            <span class="note note-data">
+              <span class="note-icon icon-data">K</span><br>
+              요금제 혜택 설명의 용어(OTT, 부가서비스, 로밍할인 등)가 이해하기 어려워 비교 자체가 불가능.
+              <span class="source-tag">※ 표407 F-8-1: 용어 이해 어려움 <span class="percent-badge percent-badge-red">30.8%</span></span>
+            </span>
+            <span class="note note-search">
+              <span class="note-icon icon-search">S</span><br>
+              현재 요금제 사용량(데이터 실사용량 등) 기준의 개인화 추천 기능 부재로 자가 판단 어려움.
+            </span>
+          </td>
+
+          <td class="cell">
+            <span class="note note-data">
+              <span class="note-icon icon-data">K</span><br>
+              "나에게 맞는 요금제"라는 직원 추천 없이 혼자 결정하기 어려움. 비교 항목이 너무 많아 선택 마비(Decision Paralysis) 발생.
+              <span class="source-tag">※ 표125 B-5: 직원 추천 의존 44.8%</span>
+            </span>
+            <span class="note note-search">
+              <span class="note-icon icon-search">S</span><br>
+              요금제 변경 후 기존 혜택이 사라지는지, 위약금이 발생하는지에 대한 명확한 안내 부족.
+            </span>
+          </td>
+
+          <td class="cell">
+            <span class="note note-data">
+              <span class="note-icon icon-data">K</span><br>
+              변경 절차 중 본인인증 단계(SMS, 앱 인증)가 복잡하고, 실패 시 재시도 방법이 불명확.
+              <span class="source-tag">※ 앱 채널 변경 비율 7.1%로 낮음 — 접근성 장벽 반영</span>
+            </span>
+            <span class="note note-search">
+              <span class="note-icon icon-search">S</span><br>
+              중간 이탈 후 콜센터/대리점으로 전환하는 추가 비용과 시간 발생. 멀티채널 단절감.
+            </span>
+          </td>
+
+          <td class="cell">
+            <span class="note note-data">
+              <span class="note-icon icon-data">K</span><br>
+              변경 완료 후 OTT/음원 등 부가혜택 등록 과정이 별도로 필요한데 안내가 불충분.
+              <span class="source-tag">※ 표407 F-8-1: 음원/OTT 혜택 등록 불편 <span class="percent-badge percent-badge-red">25.6%</span></span>
+            </span>
+            <span class="note note-search">
+              <span class="note-icon icon-search">S</span><br>
+              변경 성공 여부를 확인할 수 있는 명확한 피드백(화면, 알림)이 부족해 재확인 시도 반복.
+            </span>
+          </td>
+        </tr>
+
+        <!-- ── NEEDS ── -->
+        <tr>
+          <td class="row-header rh-needs">💡<br>Needs</td>
+
+          <td class="cell">
+            <span class="note note-data">
+              <span class="note-icon icon-data">K</span><br>
+              <strong>현재 요금제 적합성 자가진단</strong> — 지금 쓰는 요금제가 내 사용 패턴에 맞는지 쉽게 알고 싶음.
+              <span class="source-tag">※ 표391 F-5: 요금제 적절성 자가평가 니즈</span>
+            </span>
+            <span class="note note-search">
+              <span class="note-icon icon-search">S</span><br>
+              <strong>선제적 알림</strong> — 더 저렴하거나 유리한 요금제가 생겼을 때 자동으로 알림 받고 싶음.
+            </span>
+          </td>
+
+          <td class="cell">
+            <span class="note note-search">
+              <span class="note-icon icon-search">S</span><br>
+              <strong>신뢰 가능한 단일 비교 채널</strong> — SKT 공식 앱 내에서 요금제 전체를 한눈에 비교할 수 있는 기능.
+            </span>
+            <span class="note note-data">
+              <span class="note-icon icon-data">K</span><br>
+              <strong>내 실사용량 기반 추천</strong> — 최근 3개월 데이터/통화량을 반영한 맞춤 요금제 추천.
+              <span class="source-tag">※ 표123 B-4-1: 온라인 탐색 비중 높음 → 앱 내 충족 필요</span>
+            </span>
+          </td>
+
+          <td class="cell">
+            <span class="note note-search">
+              <span class="note-icon icon-search">S</span><br>
+              <strong>쉬운 탐색 UX</strong> — '요금제 변경' 기능으로 1~2탭 이내에 진입 가능한 단순한 앱 구조.
+            </span>
+            <span class="note note-search">
+              <span class="note-icon icon-search">S</span><br>
+              <strong>큰 글씨·고대비 모드</strong> — 50대 중장년층을 위한 접근성 향상 UI 옵션.
+            </span>
+          </td>
+
+          <td class="cell">
+            <span class="note note-data">
+              <span class="note-icon icon-data">K</span><br>
+              <strong>쉬운 언어로 혜택 설명</strong> — "OTT 할인"이 아닌 "넷플릭스 월 X원 할인" 식의 구체적 혜택 표현.
+              <span class="source-tag">※ 표407 F-8-1: 용어 이해 어려움 30.8%</span>
+            </span>
+            <span class="note note-search">
+              <span class="note-icon icon-search">S</span><br>
+              <strong>현재 vs 변경 후 비교 요약</strong> — 변경 시 달라지는 요금·혜택을 한 화면에서 Before/After로 확인.
+            </span>
+          </td>
+
+          <td class="cell">
+            <span class="note note-data">
+              <span class="note-icon icon-data">K</span><br>
+              <strong>AI 기반 개인화 추천</strong> — "고객님의 사용 패턴에는 이 요금제가 월 X원 유리합니다" 방식의 추천.
+              <span class="source-tag">※ 표125 B-5: 직원 추천 의존도 44.8% → 디지털 대체 필요</span>
+            </span>
+            <span class="note note-search">
+              <span class="note-icon icon-search">S</span><br>
+              <strong>변경 후 손해 없음 확인</strong> — 위약금, 혜택 유지 여부 등 리스크를 사전에 명확히 고지.
+            </span>
+          </td>
+
+          <td class="cell">
+            <span class="note note-search">
+              <span class="note-icon icon-search">S</span><br>
+              <strong>단순화된 변경 프로세스</strong> — 3단계 이내 완료 가능한 요금제 변경 플로우 (선택→확인→완료).
+            </span>
+            <span class="note note-data">
+              <span class="note-icon icon-data">K</span><br>
+              <strong>중간 저장/이어하기</strong> — 변경 도중 이탈해도 진행 상황이 저장되어 다시 이어할 수 있는 기능.
+              <span class="source-tag">※ 앱 변경 비율 낮음 7.1% — 이탈률 높은 채널 문제</span>
+            </span>
+          </td>
+
+          <td class="cell">
+            <span class="note note-data">
+              <span class="note-icon icon-data">K</span><br>
+              <strong>부가혜택 원스톱 활성화</strong> — 변경 완료 직후 OTT/혜택 서비스를 앱 내에서 바로 등록 완료.
+              <span class="source-tag">※ 표407 F-8-1: 혜택 등록 불편 25.6%</span>
+            </span>
+            <span class="note note-search">
+              <span class="note-icon icon-search">S</span><br>
+              <strong>변경 완료 요약 페이지</strong> — 변경된 요금제, 적용일, 혜택 목록을 한눈에 볼 수 있는 완료 화면.
+            </span>
+          </td>
+        </tr>
+
+        <!-- ── INSIGHT ── -->
+        <tr>
+          <td class="row-header rh-insight">🚀<br>Insight</td>
+
+          <td class="cell">
+            <span class="note note-data">
+              <span class="note-icon icon-data">K</span><br>
+              <strong>[알림 기능] 요금제 최적화 알림 도입</strong><br>
+              "현재 요금제보다 더 유리한 요금제가 있습니다" 알림을 주기적으로 발송 (월 단위 or 약정 만료 전 D-30).
+              <span class="source-tag">※ 표389 F-4-2 데이터 기반</span>
+            </span>
+          </td>
+
+          <td class="cell">
+            <span class="note note-search">
+              <span class="note-icon icon-search">S</span><br>
+              <strong>[비교 기능] Tworld 앱 내 요금제 비교 툴 강화</strong><br>
+              최대 3개 요금제를 나란히 비교하고, 내 사용량 기준으로 월 예상 금액을 자동 계산해 표시.
+            </span>
+          </td>
+
+          <td class="cell">
+            <span class="note note-search">
+              <span class="note-icon icon-search">S</span><br>
+              <strong>[UX 개선] 요금제 변경 진입 경로 단축</strong><br>
+              홈 화면 '퀵메뉴'에 '요금제 변경' 직접 링크 배치. 50대 접근성 위한 글씨 크기 조절 기능 제공.
+            </span>
+          </td>
+
+          <td class="cell">
+            <span class="note note-data">
+              <span class="note-icon icon-data">K</span><br>
+              <strong>[콘텐츠 전략] 쉬운 말로 요금제 혜택 재작성</strong><br>
+              기술적 용어를 실생활 언어로 대체 (예: "유튜브 프리미엄 월 14,900원 지원" 식으로 구체화).
+              <span class="source-tag">※ 표407 용어 이해 어려움 30.8%</span>
+            </span>
+          </td>
+
+          <td class="cell">
+            <span class="note note-data">
+              <span class="note-icon icon-data">K</span><br>
+              <strong>[AI 추천] 데이터 기반 개인화 요금제 추천 엔진</strong><br>
+              최근 3개월 사용량 분석 → "이 요금제로 변경 시 월 X원 절약 예상" 메시지로 의사결정 지원. 직원 추천 경험을 앱으로 대체.
+              <span class="source-tag">※ 표125 직원 추천 의존 44.8%</span>
+            </span>
+          </td>
+
+          <td class="cell">
+            <span class="note note-search">
+              <span class="note-icon icon-search">S</span><br>
+              <strong>[UX 단순화] 3-Step 요금제 변경 위저드</strong><br>
+              ① 요금제 선택 → ② 변경 정보 확인 (Before/After) → ③ 완료. 진행 상황 저장 기능 포함, 이탈 후 재접속 시 이어하기 제공.
+            </span>
+          </td>
+
+          <td class="cell">
+            <span class="note note-data">
+              <span class="note-icon icon-data">K</span><br>
+              <strong>[원스톱 후처리] 요금제 변경 후 혜택 등록 자동화</strong><br>
+              변경 완료 화면에서 포함된 OTT/부가서비스 원클릭 등록 지원. 혜택 미사용으로 인한 고객 이탈 방지.
+              <span class="source-tag">※ 표407 혜택 등록 불편 25.6%</span>
+            </span>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr class="footer-row">
+          <td class="footer-cell" colspan="8">
+            📊 Data Source: <strong>SKT 사용자 정기 CSI 2025 (상반기)</strong> &nbsp;|&nbsp;
+            🧠 AI Agents: 쿼리확장(1) + Journey제작(2) + Knowledge기반(3) + 검색기반(4) &nbsp;|&nbsp;
+            🎯 Target: <strong>50대 중장년층 Tworld 앱 사용자</strong> &nbsp;|&nbsp;
+            <span style="color:#E4003A; font-weight:700;">노란색 = Knowledge 데이터 기반 (우선순위 높음)</span> &nbsp;|&nbsp;
+            <span style="color:#2e7d32; font-weight:700;">초록색 = 검색/UX 리서치 기반</span>
+          </td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+
+</div><!-- /canvas -->
+
+</body>
+</html>

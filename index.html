@@ -560,6 +560,19 @@ async function generate() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ keyword })
     });
+
+    // 응답이 JSON인지 먼저 확인 (Railway 프록시가 HTML 에러 페이지를 반환할 수 있음)
+    const contentType = r.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      const text = await r.text();
+      if (r.status === 502 || r.status === 503 || r.status === 504) {
+        showError('⏳ 서버가 응답하지 않습니다 (Gateway Timeout).\n\nCJM 생성은 최대 60초 소요됩니다. 잠시 후 다시 시도해주세요.');
+      } else {
+        showError(`서버 오류 (${r.status}): 잠시 후 다시 시도해주세요.\n\n${text.slice(0, 200)}`);
+      }
+      return;
+    }
+
     const d = await r.json();
 
     if (r.status === 401) { location.reload(); return; }
@@ -567,7 +580,11 @@ async function generate() {
 
     renderResults(d.data);
   } catch (e) {
-    showError('서버 연결 오류: ' + e.message);
+    if (e.name === 'TypeError' && e.message.includes('fetch')) {
+      showError('🔌 서버에 연결할 수 없습니다.\n서버가 실행 중인지 확인해주세요.');
+    } else {
+      showError('오류: ' + e.message);
+    }
   } finally {
     setLoading(false);
   }

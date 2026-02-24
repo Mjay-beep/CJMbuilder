@@ -217,6 +217,28 @@ def is_authenticated():
     return session.get("auth") is True
 
 
+# ─── 에러 핸들러: 모든 오류를 JSON으로 반환 (HTML 반환 방지) ──────
+@app.errorhandler(400)
+def bad_request(e):
+    return jsonify({"error": f"잘못된 요청: {e}"}), 400
+
+@app.errorhandler(404)
+def not_found(e):
+    return jsonify({"error": "요청한 경로를 찾을 수 없습니다."}), 404
+
+@app.errorhandler(405)
+def method_not_allowed(e):
+    return jsonify({"error": "허용되지 않는 메서드입니다."}), 405
+
+@app.errorhandler(500)
+def internal_error(e):
+    return jsonify({"error": f"서버 내부 오류: {e}"}), 500
+
+@app.errorhandler(Exception)
+def unhandled_exception(e):
+    return jsonify({"error": str(e)}), 500
+
+
 # ─── CORS 헤더 ────────────────────────────────────────────────
 @app.after_request
 def add_cors(response):

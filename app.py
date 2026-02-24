@@ -339,15 +339,32 @@ def generate():
             response_format={"type": "json_object"},  # GPT-4o JSON 모드 보장
         )
 
-        raw = response.choices[0].message.content.strip()
+        # ── 응답 유효성 확인 ──
+        if not response.choices:
+            return jsonify({"error": "AI가 응답을 반환하지 않았습니다. 다시 시도해주세요."}), 500
 
+        raw = (response.choices[0].message.content or "").strip()
+        finish_reason = response.choices[0].finish_reason
+
+        if not raw:
+            return jsonify({
+                "error": f"AI 응답이 비어 있습니다 (finish_reason: {finish_reason}).\n"
+                         "키워드를 더 구체적으로 입력하거나 다시 시도해주세요."
+            }), 500
+
+        # ── JSON 파싱 (보정 포함) ──
         try:
             cjm_data = json.loads(raw)
         except json.JSONDecodeError:
-            # JSON 보정 시도
-            raw = re.sub(r",\s*}", "}", raw)
-            raw = re.sub(r",\s*]", "]", raw)
-            cjm_data = json.loads(raw)
+            fixed = re.sub(r",\s*}", "}", raw)
+            fixed = re.sub(r",\s*]", "]", fixed)
+            try:
+                cjm_data = json.loads(fixed)
+            except json.JSONDecodeError as e:
+                return jsonify({
+                    "error": f"AI 응답 파싱 실패: {e}\n"
+                             f"응답 미리보기: {raw[:300]}"
+                }), 500
 
         return jsonify({"success": True, "data": cjm_data, "keyword": keyword})
 

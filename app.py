@@ -312,7 +312,7 @@ def generate():
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_msg},
             ],
-            max_tokens=8000,
+            max_completion_tokens=8000,
             temperature=0.3,
             response_format={"type": "json_object"},  # GPT-4o JSON 모드 보장
         )

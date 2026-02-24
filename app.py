@@ -53,7 +53,7 @@ app.config.update(
 _knowledge_cache = None
 
 
-def extract_docx_text(filepath, max_chars=25000):
+def extract_docx_text(filepath, max_chars=15000):
     try:
         from docx import Document
         doc = Document(str(filepath))
@@ -72,7 +72,7 @@ def extract_docx_text(filepath, max_chars=25000):
         return f"[읽기 오류: {e}]"
 
 
-def extract_xlsx_text(filepath, max_chars=15000):
+def extract_xlsx_text(filepath, max_chars=8000):
     try:
         import openpyxl
         wb = openpyxl.load_workbook(str(filepath), data_only=True)
@@ -125,7 +125,7 @@ def build_system_prompt(knowledge: str) -> str:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 역할: #UserInput을 통신사 서비스 관점의 여정 쿼리로 확장합니다.
 포맷: {{#TargetSegment}}의 {{#Channel}}에서 {{#Action}} 여정을 만드세요
-최대 5개 쿼리 확장 (모호한 입력은 복수 확장)
+최대 2개 쿼리 확장. 입력이 명확하면 1개만 생성. 토큰을 아끼기 위해 꼭 필요한 경우만 2개 생성.
 
 채널 정의:
 - Tworld: 통신 관리 (요금제, 번호이동, 납부, 데이터 등)
@@ -146,18 +146,20 @@ def build_system_prompt(knowledge: str) -> str:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 역할: 아래 첨부된 Knowledge(인터뷰/CSI 데이터)를 기반으로 각 단계별 CJM을 작성합니다.
 - 실제 인터뷰 데이터를 직접 인용하듯 구체적으로 작성
-- user_action: 유저가 취하는 구체적인 행동
-- feeling: 감정 상태 (큰따옴표로 직접 인용 형식)
-- painpoint: 겪는 어려움/불편함
-- needs: 유저가 바라는 점 (숨은 Needs 포함)
-- insight: 서비스 기회/솔루션
+- 각 셀(user_action/feeling/painpoint/needs/insight)마다 knowledge 항목 1개, search 항목 1개만 작성 (토큰 절약)
+- user_action: 유저가 취하는 구체적인 행동 (1~2문장)
+- feeling: 감정 상태 (큰따옴표로 직접 인용, 1문장)
+- painpoint: 겪는 어려움/불편함 (1~2문장)
+- needs: 유저가 바라는 점 (숨은 Needs 포함, 1~2문장)
+- insight: 서비스 기회/솔루션 (1~2문장)
 - source에 반드시 파일명 명시
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 [에이전트 4: 검색/일반지식 기반 CJM 보완]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 역할: UX 관점과 일반 통신 서비스 지식으로 에이전트3이 놓친 핵심 요소를 추가합니다.
-특히 잠재적 Needs 발굴에 집중합니다.
+- 각 셀마다 search 항목 1개만 작성 (토큰 절약)
+- 특히 잠재적 Needs 발굴에 집중합니다.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 [첨부된 데이터 - Knowledge]
@@ -334,7 +336,7 @@ def generate():
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_msg},
             ],
-            max_completion_tokens=8000,
+            max_completion_tokens=16000,
             temperature=0.3,
             response_format={"type": "json_object"},  # GPT-4o JSON 모드 보장
         )

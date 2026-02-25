@@ -14,7 +14,7 @@ import json
 import re
 import secrets
 from pathlib import Path
-from flask import Flask, request, jsonify, send_from_directory, session
+from flask import Flask, request, jsonify, send_from_directory, session, Response, stream_with_context
 
 app = Flask(__name__)
 BASE_DIR = Path(__file__).parent
@@ -322,6 +322,11 @@ def api_logout():
     return jsonify({"success": True})
 
 
+def _sse(event_dict: dict) -> str:
+    """SSE 이벤트 포맷으로 변환."""
+    return "data: " + json.dumps(event_dict, ensure_ascii=False) + "\n\n"
+
+
 @app.route("/api/generate", methods=["POST", "OPTIONS"])
 def generate():
     if request.method == "OPTIONS":
@@ -344,7 +349,6 @@ def generate():
     if not keyword:
         return jsonify({"error": "키워드를 입력해주세요."}), 400
 
-    # ── OpenAI 호출 ──
     try:
         from openai import OpenAI
     except ImportError:
@@ -357,57 +361,89 @@ def generate():
         "에이전트 1→2→3→4를 순차 실행하고, 반드시 JSON 형식으로만 출력하세요."
     )
 
-    try:
-        client = OpenAI(api_key=api_key)
-        response = client.chat.completions.create(
-            model=OPENAI_MODEL,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_msg},
-            ],
-            max_completion_tokens=16000,
-            temperature=0.3,
-            response_format={"type": "json_object"},  # GPT-4o JSON 모드 보장
-        )
-
-        # ── 응답 유효성 확인 ──
-        if not response.choices:
-            return jsonify({"error": "AI가 응답을 반환하지 않았습니다. 다시 시도해주세요."}), 500
-
-        raw = (response.choices[0].message.content or "").strip()
-        finish_reason = response.choices[0].finish_reason
-
-        if not raw:
-            return jsonify({
-                "error": f"AI 응답이 비어 있습니다 (finish_reason: {finish_reason}).\n"
-                         "키워드를 더 구체적으로 입력하거나 다시 시도해주세요."
-            }), 500
-
-        # ── JSON 파싱 (보정 포함) ──
+    # ── SSE 스트림 생성기 ──────────────────────────────────────────
+    # SSE 방식으로 토큰이 생성되는 동안 계속 데이터를 전송하면
+    # Railway의 60초 HTTP 타임아웃이 적용되지 않습니다.
+    def generate_sse():
         try:
-            cjm_data = json.loads(raw)
-        except json.JSONDecodeError:
-            fixed = re.sub(r",\s*}", "}", raw)
-            fixed = re.sub(r",\s*]", "]", fixed)
+            client = OpenAI(api_key=api_key)
+
+            # 시작 알림
+            yield _sse({"type": "progress", "msg": "🤖 에이전트 1: 쿼리 확장 중..."})
+
+            collected = []
+            token_count = 0
+
+            # ── OpenAI 스트리밍 호출 ──
+            with client.chat.completions.create(
+                model=OPENAI_MODEL,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_msg},
+                ],
+                max_completion_tokens=16000,
+                temperature=0.3,
+                response_format={"type": "json_object"},
+                stream=True,
+            ) as stream:
+                for chunk in stream:
+                    if chunk.choices and chunk.choices[0].delta.content:
+                        token = chunk.choices[0].delta.content
+                        collected.append(token)
+                        token_count += 1
+
+                        # 100토큰마다 진행 상황 알림 (연결 유지 + UI 업데이트)
+                        if token_count % 100 == 0:
+                            if token_count < 300:
+                                msg = "🗺 에이전트 2: Journey 단계 설계 중..."
+                            elif token_count < 1500:
+                                msg = "📋 에이전트 3: 데이터 기반 CJM 작성 중..."
+                            else:
+                                msg = "🔍 에이전트 4: UX 관점 보완 중..."
+                            yield _sse({"type": "progress", "msg": msg})
+
+            # ── 완성된 JSON 파싱 ──
+            raw = "".join(collected).strip()
+
+            if not raw:
+                yield _sse({"type": "error", "error": "AI 응답이 비어 있습니다. 다시 시도해주세요."})
+                return
+
             try:
-                cjm_data = json.loads(fixed)
-            except json.JSONDecodeError as e:
-                return jsonify({
-                    "error": f"AI 응답 파싱 실패: {e}\n"
-                             f"응답 미리보기: {raw[:300]}"
-                }), 500
+                cjm_data = json.loads(raw)
+            except json.JSONDecodeError:
+                fixed = re.sub(r",\s*}", "}", raw)
+                fixed = re.sub(r",\s*]", "]", fixed)
+                try:
+                    cjm_data = json.loads(fixed)
+                except json.JSONDecodeError as e:
+                    yield _sse({"type": "error",
+                                "error": f"AI 응답 파싱 실패: {e}\n미리보기: {raw[:300]}"})
+                    return
 
-        return jsonify({"success": True, "data": cjm_data, "keyword": keyword})
+            yield _sse({"type": "result", "data": cjm_data, "keyword": keyword})
+            yield "data: [DONE]\n\n"
 
-    except Exception as e:
-        err = str(e)
-        if "api_key" in err.lower() or "authentication" in err.lower() or "incorrect" in err.lower():
-            return jsonify({"error": "❌ OpenAI API 키가 올바르지 않습니다. Railway Variables에서 OPENAI_API_KEY를 확인해주세요."}), 401
-        if "rate_limit" in err.lower():
-            return jsonify({"error": "⏳ API 요청 한도 초과. 잠시 후 다시 시도해주세요."}), 429
-        if "quota" in err.lower():
-            return jsonify({"error": "💳 OpenAI 크레딧이 부족합니다. OpenAI 계정을 확인해주세요."}), 402
-        return jsonify({"error": err}), 500
+        except Exception as e:
+            err = str(e)
+            if "api_key" in err.lower() or "authentication" in err.lower() or "incorrect" in err.lower():
+                yield _sse({"type": "error", "error": "❌ OpenAI API 키가 올바르지 않습니다. Railway Variables에서 OPENAI_API_KEY를 확인해주세요."})
+            elif "rate_limit" in err.lower():
+                yield _sse({"type": "error", "error": "⏳ API 요청 한도 초과. 잠시 후 다시 시도해주세요."})
+            elif "quota" in err.lower():
+                yield _sse({"type": "error", "error": "💳 OpenAI 크레딧이 부족합니다. OpenAI 계정을 확인해주세요."})
+            else:
+                yield _sse({"type": "error", "error": err})
+
+    return Response(
+        stream_with_context(generate_sse()),
+        content_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",   # nginx/Railway 버퍼링 비활성화
+            "Connection": "keep-alive",
+        },
+    )
 
 
 # ─── Main ─────────────────────────────────────────────────────

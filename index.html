@@ -605,7 +605,7 @@ function setEx(text) {
   document.getElementById('keywordInput').focus();
 }
 
-// ── CJM 생성 ────────────────────────────────────────────────
+// ── CJM 생성 (SSE 스트리밍) ──────────────────────────────────
 async function generate() {
   const keyword = document.getElementById('keywordInput').value.trim();
   if (!keyword) { alert('키워드를 입력해주세요.'); return; }
@@ -621,24 +621,53 @@ async function generate() {
       body: JSON.stringify({ keyword })
     });
 
-    // 응답이 JSON인지 먼저 확인 (Railway 프록시가 HTML 에러 페이지를 반환할 수 있음)
+    if (r.status === 401) { location.reload(); return; }
+
     const contentType = r.headers.get('content-type') || '';
-    if (!contentType.includes('application/json')) {
-      const text = await r.text();
-      if (r.status === 502 || r.status === 503 || r.status === 504) {
-        showError('⏳ 서버가 응답하지 않습니다 (Gateway Timeout).\n\nCJM 생성은 최대 60초 소요됩니다. 잠시 후 다시 시도해주세요.');
-      } else {
-        showError(`서버 오류 (${r.status}): 잠시 후 다시 시도해주세요.\n\n${text.slice(0, 200)}`);
+
+    // ── SSE 스트림 처리 ──
+    if (contentType.includes('text/event-stream')) {
+      const reader = r.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop(); // 마지막 불완전 줄 보존
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const payload = line.slice(6).trim();
+          if (payload === '[DONE]') break;
+
+          let evt;
+          try { evt = JSON.parse(payload); } catch { continue; }
+
+          if (evt.type === 'progress') {
+            updateLoadingMsg(evt.msg);
+          } else if (evt.type === 'result') {
+            renderResults(evt.data);
+          } else if (evt.type === 'error') {
+            showError(evt.error || '알 수 없는 오류');
+          }
+        }
       }
-      return;
+
+    // ── 일반 JSON 응답 폴백 (구형 환경 대비) ──
+    } else if (contentType.includes('application/json')) {
+      const d = await r.json();
+      if (!r.ok || d.error) { showError(d.error || '알 수 없는 오류'); return; }
+      renderResults(d.data);
+
+    } else {
+      const text = await r.text();
+      showError(`서버 오류 (${r.status}): 잠시 후 다시 시도해주세요.\n\n${text.slice(0, 200)}`);
     }
 
-    const d = await r.json();
-
-    if (r.status === 401) { location.reload(); return; }
-    if (!r.ok || d.error) { showError(d.error || '알 수 없는 오류'); return; }
-
-    renderResults(d.data);
   } catch (e) {
     if (e.name === 'TypeError' && e.message.includes('fetch')) {
       showError('🔌 서버에 연결할 수 없습니다.\n서버가 실행 중인지 확인해주세요.');
@@ -655,6 +684,11 @@ function setLoading(on) {
   document.getElementById('loadingSection').classList.toggle('active', on);
   document.getElementById('generateBtn').disabled = on;
   document.getElementById('emptyState').style.display = on ? 'none' : '';
+  if (on) updateLoadingMsg('🤖 에이전트 1: 쿼리 확장 중...');
+}
+function updateLoadingMsg(msg) {
+  const el = document.querySelector('.loading-text');
+  if (el) el.textContent = msg;
 }
 function hideError()   { document.getElementById('errorBox').classList.remove('active'); }
 function showError(m)  {

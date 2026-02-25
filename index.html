@@ -3,13 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CJM Builder · SKT</title>
+<title>CJM Builder · CX team</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
-  background: #f0f2f5;
+  font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  background: #f5f5fb;
   color: #1a1a1a;
   min-height: 100vh;
 }
@@ -19,7 +21,7 @@ body {
 ════════════════════════════════════════ */
 .pw-screen {
   position: fixed; inset: 0; z-index: 9999;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+  background: linear-gradient(135deg, #1e1b4b 0%, #27236a 60%, #312e81 100%);
   display: flex; align-items: center; justify-content: center;
 }
 .pw-card {
@@ -32,7 +34,7 @@ body {
   width: 400px;
   box-shadow: 0 24px 64px rgba(0,0,0,.5);
 }
-.pw-logo { font-size: 30px; font-weight: 900; color: #E4003A; letter-spacing: -1px; margin-bottom: 4px; }
+.pw-logo { font-size: 22px; font-weight: 900; color: #a5b4fc; letter-spacing: -0.5px; margin-bottom: 4px; }
 .pw-title { font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 6px; }
 .pw-sub { font-size: 13px; color: rgba(255,255,255,.45); margin-bottom: 36px; line-height: 1.6; }
 .pw-input {
@@ -44,20 +46,22 @@ body {
   font-size: 16px; color: #fff;
   outline: none; margin-bottom: 12px;
   letter-spacing: 3px;
+  font-family: inherit;
   transition: border-color .2s;
 }
 .pw-input::placeholder { letter-spacing: 0; color: rgba(255,255,255,.35); }
-.pw-input:focus { border-color: #E4003A; }
+.pw-input:focus { border-color: #818cf8; }
 .pw-btn {
   width: 100%;
-  background: #E4003A; color: #fff;
+  background: #667eea; color: #fff;
   border: none; border-radius: 12px;
   padding: 14px; font-size: 15px; font-weight: 800;
   cursor: pointer; transition: opacity .15s;
+  font-family: inherit;
 }
 .pw-btn:hover { opacity: .85; }
 .pw-btn:disabled { opacity: .5; cursor: not-allowed; }
-.pw-error { color: #ff6b8a; font-size: 13px; margin-top: 14px; min-height: 20px; }
+.pw-error { color: #a5b4fc; font-size: 13px; margin-top: 14px; min-height: 20px; }
 .pw-shield { font-size: 36px; margin-bottom: 16px; display: block; }
 
 /* ════════════════════════════════════════
@@ -69,20 +73,20 @@ body {
 .topbar {
   position: sticky; top: 0; z-index: 100;
   background: #fff;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e8e8f0;
   padding: 0 24px;
   height: 52px;
   display: flex; align-items: center; gap: 12px;
-  box-shadow: 0 1px 4px rgba(0,0,0,.08);
+  box-shadow: 0 1px 6px rgba(102,126,234,.1);
 }
-.topbar-logo { font-size: 22px; font-weight: 900; color: #E4003A; letter-spacing: -1px; }
+.topbar-logo { font-size: 15px; font-weight: 900; color: #667eea; letter-spacing: -0.5px; }
 .topbar-sep { color: #ddd; font-size: 18px; }
-.topbar-title { font-size: 14px; font-weight: 700; color: #333; }
+.topbar-title { font-size: 14px; font-weight: 700; color: #444; }
 .topbar-tag {
-  background: #fff0f4; color: #E4003A;
+  background: #eef0fe; color: #667eea;
   font-size: 10px; font-weight: 800;
   padding: 3px 10px; border-radius: 99px;
-  border: 1px solid #ffc2cc;
+  border: 1px solid #c7cbff;
 }
 .topbar-spacer { flex: 1; }
 .topbar-secure {
@@ -95,29 +99,30 @@ body {
   background: none; border: 1px solid #e0e0e0;
   border-radius: 8px; padding: 5px 12px;
   cursor: pointer; font-size: 12px; color: #888;
+  font-family: inherit;
   transition: all .15s;
 }
 .logout-btn:hover { background: #f5f5f5; color: #333; }
 
 /* ─── 히어로 ── */
 .hero {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+  background: linear-gradient(135deg, #1e1b4b 0%, #27236a 60%, #312e81 100%);
   padding: 48px 24px 40px;
   text-align: center;
 }
 .hero-badge {
   display: inline-block;
-  background: rgba(228,0,58,.2); color: #ff6b8a;
+  background: rgba(102,126,234,.2); color: #a5b4fc;
   font-size: 11px; font-weight: 700; letter-spacing: 2px;
   padding: 4px 14px; border-radius: 99px;
-  border: 1px solid rgba(228,0,58,.4);
+  border: 1px solid rgba(102,126,234,.4);
   margin-bottom: 16px;
 }
 .hero-title {
   font-size: 32px; font-weight: 900; color: #fff;
   letter-spacing: -1px; line-height: 1.2; margin-bottom: 8px;
 }
-.hero-title span { color: #E4003A; }
+.hero-title span { color: #a5b4fc; }
 .hero-sub { font-size: 14px; color: rgba(255,255,255,.55); margin-bottom: 32px; }
 
 .search-box {
@@ -131,19 +136,19 @@ body {
   border-radius: 12px;
   padding: 14px 20px;
   font-size: 16px; color: #fff;
-  outline: none;
+  outline: none; font-family: inherit;
   transition: border-color .2s;
 }
 .search-input::placeholder { color: rgba(255,255,255,.4); }
-.search-input:focus { border-color: #E4003A; background: rgba(255,255,255,.15); }
+.search-input:focus { border-color: #818cf8; background: rgba(255,255,255,.15); }
 .search-btn {
-  background: #E4003A; color: #fff;
+  background: #667eea; color: #fff;
   border: none; border-radius: 12px;
   padding: 14px 28px; font-size: 15px; font-weight: 800;
-  cursor: pointer; white-space: nowrap;
+  cursor: pointer; white-space: nowrap; font-family: inherit;
   transition: all .15s;
 }
-.search-btn:hover { background: #c20033; transform: translateY(-1px); }
+.search-btn:hover { background: #5a6fd6; transform: translateY(-1px); }
 .search-btn:active { transform: translateY(0); }
 .search-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
 
@@ -158,14 +163,14 @@ body {
   padding: 5px 14px; font-size: 12px; color: rgba(255,255,255,.65);
   cursor: pointer; transition: all .15s;
 }
-.example-chip:hover { background: rgba(228,0,58,.25); border-color: #E4003A; color: #fff; }
+.example-chip:hover { background: rgba(102,126,234,.3); border-color: #818cf8; color: #fff; }
 
 /* ─── 로딩 ── */
 .loading-section { display: none; text-align: center; padding: 72px 24px; }
 .loading-section.active { display: block; }
 .spinner {
   width: 52px; height: 52px;
-  border: 4px solid #eee; border-top-color: #E4003A;
+  border: 4px solid #eee; border-top-color: #667eea;
   border-radius: 50%;
   animation: spin .8s linear infinite;
   margin: 0 auto 20px;
@@ -205,15 +210,15 @@ body {
   background: #fff; border-radius: 16px;
   padding: 18px 22px; margin-bottom: 14px;
   box-shadow: 0 2px 8px rgba(0,0,0,.06);
-  border-left: 5px solid #E4003A;
+  border-left: 5px solid #667eea;
   display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap;
 }
-.query-label { font-size: 10px; font-weight: 800; color: #E4003A; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
+.query-label { font-size: 10px; font-weight: 800; color: #667eea; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
 .query-chips { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .query-chip {
   display: inline-block;
-  background: #fff0f3; color: #E4003A;
-  border: 1.5px solid #ffc2cc;
+  background: #eef0fe; color: #667eea;
+  border: 1.5px solid #c7cbff;
   border-radius: 99px; padding: 4px 14px;
   font-size: 13px; font-weight: 700;
 }
@@ -221,7 +226,7 @@ body {
 .query-meta { margin-left: auto; font-size: 11px; color: #999; text-align: right; }
 .channel-badge {
   display: inline-block;
-  background: #1a1a2e; color: #fff;
+  background: #312e81; color: #fff;
   font-size: 10px; font-weight: 700;
   padding: 3px 10px; border-radius: 99px;
 }
@@ -243,22 +248,22 @@ body {
 }
 
 .col-header {
-  background: #1a1a2e; color: #fff;
+  background: #312e81; color: #fff;
   text-align: center;
   padding: 14px 10px;
   font-size: 12px; font-weight: 700;
-  border-right: 1px solid #2a2a4e;
+  border-right: 1px solid #3d3a9a;
   vertical-align: middle;
 }
 .col-header.first {
-  background: #0f0f23; font-size: 11px;
-  border-right: 2px solid #2a2a4e;
+  background: #1e1b4b; font-size: 11px;
+  border-right: 2px solid #3d3a9a;
   width: 110px; min-width: 110px;
   position: sticky; left: 0; z-index: 20;
 }
 .step-num {
   display: inline-block;
-  background: #E4003A; color: #fff;
+  background: #667eea; color: #fff;
   font-size: 10px; font-weight: 800;
   border-radius: 50%;
   width: 20px; height: 20px; line-height: 20px;
@@ -275,11 +280,11 @@ body {
   border-right: 1px solid rgba(255,255,255,.2);
 }
 .phase-first {
-  background: #0f0f23; color: rgba(255,255,255,.45);
+  background: #1e1b4b; color: rgba(255,255,255,.45);
   font-size: 9px; font-weight: 600;
   position: sticky; left: 0; z-index: 10;
   padding: 6px 10px; text-align: center;
-  border-right: 2px solid #2a2a4e;
+  border-right: 2px solid #3d3a9a;
 }
 
 /* 행 헤더 */
@@ -294,7 +299,7 @@ body {
   position: sticky; left: 0; z-index: 10;
   line-height: 1.4;
 }
-.rh-action  { background: #e3f2fd; color: #1565c0; }
+.rh-action  { background: #e8eeff; color: #3949ab; }
 .rh-feeling { background: #fff8e1; color: #e65100; }
 .rh-pain    { background: #fce4ec; color: #c62828; }
 .rh-needs   { background: #f3e5f5; color: #6a1b9a; }
@@ -334,10 +339,65 @@ td.cell {
 }
 .icon-data   { background: #f9a825; color: #fff; }
 .icon-search { background: #7cb342; color: #fff; }
-.source-tag {
-  display: block; font-size: 9px; color: #bbb;
-  margin-top: 5px; font-style: italic;
+
+/* ─── 출처 툴팁 ── */
+.src-tip {
+  position: relative;
+  display: inline-block;
+  cursor: help;
+  font-size: 9px; font-style: normal;
+  color: #667eea;
+  background: #eef0fe;
+  border: 1px solid #c7cbff;
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin-top: 5px;
+  user-select: none;
 }
+.src-tip::before {
+  content: '';
+  position: absolute;
+  bottom: calc(100% + 2px);
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #1e1b4b;
+  pointer-events: none;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity .15s;
+  z-index: 9998;
+}
+.src-tip::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e1b4b;
+  color: #e0e7ff;
+  font-size: 11px;
+  line-height: 1.6;
+  padding: 8px 12px;
+  border-radius: 8px;
+  white-space: normal;
+  word-break: keep-all;
+  min-width: 200px;
+  max-width: 300px;
+  z-index: 9999;
+  box-shadow: 0 4px 16px rgba(0,0,0,.3);
+  pointer-events: none;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity .15s;
+  text-align: left;
+}
+.src-tip:hover::before,
+.src-tip:hover::after {
+  visibility: visible;
+  opacity: 1;
+}
+
 .quote-text {
   font-style: italic; color: #555;
   padding: 4px 8px;
@@ -358,9 +418,9 @@ td.cell {
 
 /* ─── 푸터 ── */
 .footer {
-  text-align: center; padding: 28px 24px;
-  font-size: 11px; color: #ccc;
-  border-top: 1px solid #e8e8e8; margin-top: 8px;
+  text-align: center; padding: 20px 24px;
+  font-size: 11px; color: #c8c8d8;
+  border-top: 1px solid #eef0fe; margin-top: 8px;
 }
 
 @media print {
@@ -378,7 +438,7 @@ td.cell {
 <div class="pw-screen" id="pwScreen">
   <div class="pw-card">
     <span class="pw-shield">🔐</span>
-    <div class="pw-logo">SKT</div>
+    <div class="pw-logo">CX team</div>
     <div class="pw-title">CJM Builder</div>
     <div class="pw-sub">내부 전용 시스템입니다.<br>접속 비밀번호를 입력해주세요.</div>
     <input type="password" class="pw-input" id="pwInput"
@@ -396,7 +456,7 @@ td.cell {
 
 <!-- 상단 바 -->
 <div class="topbar">
-  <span class="topbar-logo">SKT</span>
+  <span class="topbar-logo">CX team</span>
   <span class="topbar-sep">|</span>
   <span class="topbar-title">CJM Builder</span>
   <span class="topbar-tag">AI POWERED</span>
@@ -409,7 +469,7 @@ td.cell {
 <div class="hero">
   <div class="hero-badge">MULTI-AGENT · GPT-4o POWERED</div>
   <h1 class="hero-title">Customer Journey Map<br><span>자동화 생성기</span></h1>
-  <p class="hero-sub">키워드를 입력하면 AI가 SKT 인터뷰 데이터 기반으로 CJM을 자동 생성합니다</p>
+  <p class="hero-sub">키워드를 입력하면 AI가 인터뷰 데이터 기반으로 CJM을 자동 생성합니다</p>
 
   <div class="search-box">
     <input type="text" class="search-input" id="keywordInput"
@@ -451,7 +511,7 @@ td.cell {
     <span class="legend-label">범례</span>
     <span class="legend-item">
       <span class="legend-dot dot-data"></span>
-      📋 데이터 기반 (에이전트3 · SKT 인터뷰/CSI, 하이라이트)
+      📋 데이터 기반 (에이전트3 · 인터뷰/CSI, 하이라이트)
     </span>
     <span class="legend-item">
       <span class="legend-dot dot-search"></span>
@@ -469,7 +529,7 @@ td.cell {
 </div>
 
 <!-- 푸터 -->
-<div class="footer">SKT CJM Builder · Powered by OpenAI GPT-4o · 내부 전용</div>
+<div class="footer">CX team CJM Builder</div>
 
 </div><!-- /mainApp -->
 
@@ -691,7 +751,7 @@ function renderNotes(field, rowKey) {
   const kHtml = knowledge.map(n=>`<span class="note note-data">
     <span class="note-icon icon-data">📋 데이터</span>
     ${isQuote ? `<div class="quote-text">${esc(n.text)}</div>` : esc(n.text)}
-    ${n.source ? `<span class="source-tag">📌 출처: ${esc(n.source)}</span>` : ''}
+    ${n.source ? `<span class="src-tip" data-tip="${esc(n.source_detail || n.source)}">📌 출처</span>` : ''}
   </span>`).join('');
 
   const sHtml = search.map(n=>`<span class="note note-search">

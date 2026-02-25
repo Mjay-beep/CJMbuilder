@@ -51,6 +51,7 @@ app.config.update(
 
 # ─── Knowledge 캐시 ────────────────────────────────────────────
 _knowledge_cache = None
+_knowledge_files: list[str] = []   # 로드된 파일명 목록
 
 
 def extract_docx_text(filepath, max_chars=15000):
@@ -94,7 +95,7 @@ def extract_xlsx_text(filepath, max_chars=8000):
 
 
 def load_knowledge():
-    global _knowledge_cache
+    global _knowledge_cache, _knowledge_files
     if _knowledge_cache is not None:
         return _knowledge_cache
 
@@ -104,10 +105,12 @@ def load_knowledge():
         f for f in BASE_DIR.iterdir()
         if f.suffix in (".docx", ".xlsx") and not f.name.startswith("~")
     ])
+    _knowledge_files = []
     for fp in files:
         print(f"  📄 {fp.name}")
         text = extract_docx_text(fp) if fp.suffix == ".docx" else extract_xlsx_text(fp)
         parts.append(f"\n{'─'*60}\n📌 파일명: {fp.name}\n{'─'*60}\n{text}\n")
+        _knowledge_files.append(fp.name)
 
     _knowledge_cache = "\n".join(parts)
     kb = len(_knowledge_cache.encode("utf-8")) / 1024
@@ -299,6 +302,7 @@ def api_status():
     return jsonify({
         "ok": True,
         "knowledge_loaded": _knowledge_cache is not None,
+        "knowledge_files": _knowledge_files,
         "authenticated": is_authenticated(),
         "password_required": bool(SITE_PASSWORD),
     })

@@ -152,6 +152,11 @@ body.has-results .search-btn {
   padding: 10px 20px;
   font-size: 14px;
 }
+body.has-results .kb-bar {
+  max-width: 100%;
+  margin: 6px auto 0;
+  justify-content: flex-start;
+}
 
 .search-box {
   max-width: 680px; margin: 0 auto;
@@ -444,6 +449,31 @@ td.cell {
 .empty-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
 .empty-sub { font-size: 13px; }
 
+/* ─── Knowledge 파일 바 ── */
+.kb-bar {
+  max-width: 680px; margin: 14px auto 0;
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  justify-content: center;
+}
+.kb-bar-label {
+  font-size: 11px; color: rgba(255,255,255,.35); font-weight: 600;
+  letter-spacing: .3px; white-space: nowrap;
+}
+.kb-file {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: rgba(165,180,252,.12);
+  border: 1px solid rgba(165,180,252,.22);
+  border-radius: 6px;
+  padding: 2px 9px;
+  font-size: 11px; color: rgba(165,180,252,.75);
+  white-space: nowrap;
+}
+.kb-file-icon { opacity: .7; font-size: 10px; }
+.kb-empty {
+  font-size: 11px; color: rgba(255,255,255,.25); font-style: italic;
+}
+/* 결과 표시 시에도 kb-bar는 그대로 유지 (숨기지 않음) */
+
 /* ─── 푸터 ── */
 .footer {
   text-align: center; padding: 20px 24px;
@@ -517,6 +547,11 @@ td.cell {
     <span class="example-chip" onclick="setEx('요금 납부')">요금 납부</span>
     <span class="example-chip" onclick="setEx('구독상품 검색 및 가입')">구독상품 검색 및 가입</span>
   </div>
+
+  <!-- Knowledge 참조 파일 표시 -->
+  <div class="kb-bar" id="kbBar">
+    <span class="kb-empty">Knowledge 로딩 중...</span>
+  </div>
 </div>
 
 <!-- 로딩 -->
@@ -587,6 +622,37 @@ function showApp() {
   document.getElementById('pwScreen').style.display = 'none';
   document.getElementById('mainApp').style.display = 'block';
   document.getElementById('keywordInput').focus();
+  loadKnowledgeFiles();
+}
+
+// ── Knowledge 파일 목록 표시 ─────────────────────────────────
+async function loadKnowledgeFiles() {
+  try {
+    const r = await fetch('/api/status');
+    const d = await r.json();
+    renderKbBar(d.knowledge_files || []);
+  } catch {
+    renderKbBar([]);
+  }
+}
+
+function renderKbBar(files) {
+  const bar = document.getElementById('kbBar');
+  if (!bar) return;
+
+  if (!files.length) {
+    bar.innerHTML = '<span class="kb-empty">참조 파일 없음</span>';
+    return;
+  }
+
+  const icons = { xlsx: '📊', docx: '📄', default: '📎' };
+  const tags = files.map(f => {
+    const ext = f.split('.').pop().toLowerCase();
+    const icon = icons[ext] || icons.default;
+    return `<span class="kb-file"><span class="kb-file-icon">${icon}</span>${f}</span>`;
+  }).join('');
+
+  bar.innerHTML = `<span class="kb-bar-label">📚 참조 Knowledge</span>${tags}`;
 }
 
 // ── 로그인 ──────────────────────────────────────────────────

@@ -109,6 +109,7 @@ body {
   background: linear-gradient(135deg, #1e1b4b 0%, #27236a 60%, #312e81 100%);
   padding: 48px 24px 40px;
   text-align: center;
+  transition: padding .3s ease;
 }
 .hero-badge {
   display: inline-block;
@@ -117,13 +118,40 @@ body {
   padding: 4px 14px; border-radius: 99px;
   border: 1px solid rgba(102,126,234,.4);
   margin-bottom: 16px;
+  transition: opacity .2s, max-height .3s;
 }
 .hero-title {
   font-size: 32px; font-weight: 900; color: #fff;
   letter-spacing: -1px; line-height: 1.2; margin-bottom: 8px;
+  transition: opacity .2s, max-height .3s;
 }
 .hero-title span { color: #a5b4fc; }
-.hero-sub { font-size: 14px; color: rgba(255,255,255,.55); margin-bottom: 32px; }
+.hero-sub {
+  font-size: 14px; color: rgba(255,255,255,.55); margin-bottom: 32px;
+  transition: opacity .2s, max-height .3s;
+}
+
+/* 결과 표시 시 히어로 최소화 */
+body.has-results .hero {
+  padding: 14px 24px;
+}
+body.has-results .hero-badge,
+body.has-results .hero-title,
+body.has-results .hero-sub,
+body.has-results .examples {
+  display: none;
+}
+body.has-results .search-box {
+  max-width: 100%;
+}
+body.has-results .search-input {
+  padding: 10px 16px;
+  font-size: 14px;
+}
+body.has-results .search-btn {
+  padding: 10px 20px;
+  font-size: 14px;
+}
 
 .search-box {
   max-width: 680px; margin: 0 auto;
@@ -467,13 +495,13 @@ td.cell {
 
 <!-- 히어로 -->
 <div class="hero">
-  <div class="hero-badge">MULTI-AGENT · GPT-4o POWERED</div>
+  <div class="hero-badge">MULTI AGENT · Model: GPT 5.2</div>
   <h1 class="hero-title">Customer Journey Map<br><span>자동화 생성기</span></h1>
-  <p class="hero-sub">키워드를 입력하면 AI가 인터뷰 데이터 기반으로 CJM을 자동 생성합니다</p>
+  <p class="hero-sub">키워드를 입력하면 리서치 데이터를 기반으로 CJM을 자동 생성합니다</p>
 
   <div class="search-box">
     <input type="text" class="search-input" id="keywordInput"
-           placeholder="예: 번호 이동, 요금제 변경, 여행, 멤버십 혜택..."
+           placeholder="예: 번호 이동 여정, 60대 기기 변경, 30대 멤버십 이용..."
            onkeydown="if(event.key==='Enter') generate()">
     <button class="search-btn" id="generateBtn" onclick="generate()">
       CJM 생성 →
@@ -483,12 +511,11 @@ td.cell {
   <div class="examples">
     <span class="example-chip" onclick="setEx('번호 이동')">번호 이동</span>
     <span class="example-chip" onclick="setEx('요금제 변경')">요금제 변경</span>
-    <span class="example-chip" onclick="setEx('해외 여행')">해외 여행</span>
-    <span class="example-chip" onclick="setEx('멤버십 혜택')">멤버십 혜택</span>
-    <span class="example-chip" onclick="setEx('단말기 구매')">단말기 구매</span>
-    <span class="example-chip" onclick="setEx('미납 요금')">미납 요금</span>
-    <span class="example-chip" onclick="setEx('신규 가입')">신규 가입</span>
-    <span class="example-chip" onclick="setEx('T우주 구독')">T우주 구독</span>
+    <span class="example-chip" onclick="setEx('로밍 상품 가입')">로밍 상품 가입</span>
+    <span class="example-chip" onclick="setEx('멤버십 혜택 조회')">멤버십 혜택 조회</span>
+    <span class="example-chip" onclick="setEx('데이터 선물하기')">데이터 선물하기</span>
+    <span class="example-chip" onclick="setEx('요금 납부')">요금 납부</span>
+    <span class="example-chip" onclick="setEx('구독상품 검색 및 가입')">구독상품 검색 및 가입</span>
   </div>
 </div>
 
@@ -699,6 +726,7 @@ function showError(m)  {
 function hideResults() {
   document.getElementById('resultsSection').style.display = 'none';
   document.getElementById('cjmContainer').innerHTML = '';
+  document.body.classList.remove('has-results');
 }
 
 // ── 결과 렌더링 ──────────────────────────────────────────────
@@ -710,6 +738,9 @@ function renderResults(data) {
   document.getElementById('resultsSection').style.display = 'block';
   document.getElementById('cjmContainer').innerHTML =
     list.map((cjm, i) => renderCard(cjm, i + 1, list.length)).join('');
+
+  // 히어로 최소화
+  document.body.classList.add('has-results');
 }
 
 function renderCard(cjm, idx, total) {
@@ -783,13 +814,11 @@ function renderNotes(field, rowKey) {
   const isQuote   = rowKey === 'feeling';
 
   const kHtml = knowledge.map(n=>`<span class="note note-data">
-    <span class="note-icon icon-data">📋 데이터</span>
     ${isQuote ? `<div class="quote-text">${esc(n.text)}</div>` : esc(n.text)}
     ${n.source ? `<span class="src-tip" data-tip="${esc(n.source_detail || n.source)}">📌 출처</span>` : ''}
   </span>`).join('');
 
   const sHtml = search.map(n=>`<span class="note note-search">
-    <span class="note-icon icon-search">🔍 일반지식</span>
     ${isQuote ? `<div class="quote-text">${esc(n.text)}</div>` : esc(n.text)}
   </span>`).join('');
 

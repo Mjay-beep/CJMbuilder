@@ -195,10 +195,14 @@ def build_system_prompt(knowledge: str) -> str:
 에이전트3(knowledge) 데이터가 핵심이며 하이라이트 표시됩니다. 에이전트4(search) 데이터로 보완합니다.
 출처(source_detail)는 파일명과 참조한 섹션/발언자/핵심내용을 함께 기재합니다.
 
-⚠ 응답 시간 제약 (중요): 서버 응답 제한(60초) 준수를 위해 아래 제약을 반드시 지키세요.
-- 에이전트1 쿼리 확장: 최대 3개까지만 생성 (입력이 명확하면 1~2개)
-- 각 셀(knowledge/search)마다 항목 1개씩만 작성 (핵심만 간결하게)
-- 전체 JSON 길이를 최소화하여 빠르게 완성할 것
+항목 수 규칙:
+- User Action, Feeling, Painpoint, Needs, Insight 각 셀마다 최소 2개 최대 5개 항목을 유동적으로 생성합니다.
+- 첨부된 Knowledge 데이터를 근거로 생성할 수 있으면 최대한 knowledge 항목을 우선으로 채웁니다.
+- Knowledge로 채우기 어려운 경우 신뢰도 있는 자료 기반의 search 항목으로 보완합니다.
+- 에이전트1 쿼리 확장: 최대 3개 (입력이 명확하면 1~2개)
+
+출처(source_detail) 형식: "파일명.docx · p.페이지번호 · [발언자] 인용된 원문 핵심 문장"
+(페이지 번호가 불명확하면 섹션명/발언자 정보와 핵심 문장만 기재)
 
 {{
   "cjm_list": [
@@ -214,24 +218,27 @@ def build_system_prompt(knowledge: str) -> str:
       "table": {{
         "1": {{
           "user_action": {{
-            "knowledge": [{{"text": "구체적 행동 서술", "source": "파일명.docx", "source_detail": "파일명.docx - [섹션명/발언자/핵심내용 요약]"}}],
-            "search": [{{"text": "구체적 행동 서술"}}]
+            "knowledge": [
+              {{"text": "구체적 행동 서술", "source": "파일명.docx", "source_detail": "파일명.docx · p.3 · [발언자] 인용 원문"}},
+              {{"text": "구체적 행동 서술 2", "source": "파일명.docx", "source_detail": "파일명.docx · p.7 · [발언자] 인용 원문"}}
+            ],
+            "search": [{{"text": "일반지식 기반 행동 서술"}}]
           }},
           "feeling": {{
-            "knowledge": [{{"text": "\\"인용구 형식의 감정\\"", "source": "파일명.docx", "source_detail": "파일명.docx - [섹션명/발언자/핵심내용 요약]"}}],
-            "search": [{{"text": "\\"인용구 형식의 감정\\""}}]
+            "knowledge": [{{"text": "\"인용구 형식의 감정\"", "source": "파일명.docx", "source_detail": "파일명.docx · p.4 · [발언자] 인용 원문"}}],
+            "search": [{{"text": "\"일반지식 기반 감정\""}}]
           }},
           "painpoint": {{
-            "knowledge": [{{"text": "불편함 서술", "source": "파일명.docx", "source_detail": "파일명.docx - [섹션명/발언자/핵심내용 요약]"}}],
-            "search": [{{"text": "불편함 서술"}}]
+            "knowledge": [{{"text": "불편함 서술", "source": "파일명.docx", "source_detail": "파일명.docx · p.5 · [발언자] 인용 원문"}}],
+            "search": [{{"text": "일반지식 기반 불편함"}}]
           }},
           "needs": {{
-            "knowledge": [{{"text": "요구사항 서술", "source": "파일명.docx", "source_detail": "파일명.docx - [섹션명/발언자/핵심내용 요약]"}}],
-            "search": [{{"text": "요구사항 서술"}}]
+            "knowledge": [{{"text": "요구사항 서술", "source": "파일명.docx", "source_detail": "파일명.docx · p.6 · [발언자] 인용 원문"}}],
+            "search": [{{"text": "일반지식 기반 요구사항"}}]
           }},
           "insight": {{
-            "knowledge": [{{"text": "솔루션 제안", "source": "파일명.docx", "source_detail": "파일명.docx - [섹션명/발언자/핵심내용 요약]"}}],
-            "search": [{{"text": "솔루션 제안"}}]
+            "knowledge": [{{"text": "솔루션 제안", "source": "파일명.docx", "source_detail": "파일명.docx · p.8 · [발언자] 인용 원문"}}],
+            "search": [{{"text": "일반지식 기반 솔루션"}}]
           }}
         }}
       }}
